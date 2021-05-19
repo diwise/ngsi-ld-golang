@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	fiware "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/datamodels/fiware"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	fiware "github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 //RoadSurfaceObserved is a Diwise entity

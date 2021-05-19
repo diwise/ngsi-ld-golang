@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/datamodels/fiware"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 func TestGetBeachAsGeoJSON(t *testing.T) {

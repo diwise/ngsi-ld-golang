@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/datamodels/fiware"
-	ngsierrors "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/errors"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
+	ngsierrors "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 func createURL(path string, params ...string) string {

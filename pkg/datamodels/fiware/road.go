@@ -3,7 +3,7 @@ package fiware
 import (
 	"strings"
 
-	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 //Road is a Fiware entity

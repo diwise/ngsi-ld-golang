@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 //RoadSurfaceType contains a surface type and a probability

@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 	"github.com/google/uuid"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/errors"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 )
 
 //CsourceRegistration is a wrapper for information about a registered context source

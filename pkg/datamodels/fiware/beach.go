@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 //Beach is a Fiware entity

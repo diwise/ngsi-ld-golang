@@ -1,4 +1,4 @@
-module github.com/iot-for-tillgenglighet/ngsi-ld-golang
+module github.com/diwise/ngsi-ld-golang
 
 go 1.15
 

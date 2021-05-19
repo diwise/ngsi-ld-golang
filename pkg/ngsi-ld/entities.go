@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/errors"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
 //Entity is an informational representative of something that is supposed to exist in the real world, physically or conceptually
