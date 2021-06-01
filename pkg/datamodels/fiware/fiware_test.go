@@ -50,7 +50,7 @@ func TestTrafficFlowObserved(t *testing.T) {
 	location := [2]float64{1.0, 1.0}
 	ts := time.Now().String()
 
-	tfo := NewTrafficFlowObserved(id, location[0], location[1], ts, 1)
+	tfo := NewTrafficFlowObserved(id, location[0], location[1], ts, 1, 109)
 	if tfo == nil {
 		t.Error("Expectation failed. TrafficFlowObserved is empty")
 	}
