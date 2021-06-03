@@ -59,6 +59,91 @@ func TestNewRoadSegment(t *testing.T) {
 	}
 }
 
+const tfoStr string = `{
+    "id": "urn:ngsi-ld:TrafficFlowObserved:TrafficFlowObserved",
+    "type": "TrafficFlowObserved",
+    "dateObserved": {
+        "type": "Property",
+        "value": {
+            "@type": "DateTime",
+            "@value": "2016-12-07T11:10:00Z"
+        }
+    },
+    "dateObservedFrom": {
+        "type": "Property",
+        "value": {
+            "@type": "DateTime",
+            "@value": "2016-12-07T11:10:00Z"
+        }
+    },
+    "dateObservedTo": {
+        "type": "Property",
+        "value": {
+            "@type": "DateTime",
+            "@value": "2016-12-07T11:15:00Z"
+        }
+    },
+    "intensity": {
+        "type": "Property",
+        "value": 197
+    },
+    "laneId": {
+        "type": "Property",
+        "value": 1
+    },
+    "location": {
+      	"type": "GeoProperty",
+      	"value": {
+        		"coordinates": [
+          		17.414662,
+          		62.421033
+        		],
+        		"type": "Point"
+      	}
+    },
+    "averageVehicleSpeed": {
+        "type": "Property",
+        "value": 52.6
+    },
+    "@context": [
+        "https://schema.lab.fiware.org/ld/context",
+        "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld"
+    ]
+}`
+
+func TestCreateEntityWorksForTrafficFlowObserved(t *testing.T) {
+	entityID := fiware.TrafficFlowObservedIDPrefix + "TrafficFlowObserved"
+	tfo := fiware.TrafficFlowObserved{}
+
+	err := json.Unmarshal([]byte(tfoStr), &tfo)
+	if err != nil {
+		t.Errorf("failed to unmarshal into struct: %s", err)
+	}
+
+	jsonBytes, _ := json.Marshal(tfo)
+	byteReader := bytes.NewBuffer(jsonBytes)
+	typeName := tfo.Type
+
+	req, _ := http.NewRequest("POST", createURL("/entities"), byteReader)
+	w := httptest.NewRecorder()
+
+	ctxReg, ctxSrc := newContextRegistryWithSourceForType(typeName)
+
+	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Error("Handler did not return the expected status code. ", w.Code, " != ", http.StatusCreated)
+	}
+
+	if ctxSrc.createdEntityType != typeName {
+		t.Error("CreateEntity called with wrong type name. ", ctxSrc.createdEntityType, " != ", typeName)
+	}
+
+	if ctxSrc.createdEntity != entityID {
+		t.Error("CreateEntity called with wrong entity ID. ", ctxSrc.createdEntity, " != ", entityID)
+	}
+}
+
 func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
 	entityID := fiware.DeviceIDPrefix + "livboj"
 	byteReader, typeName := newEntityAsByteBuffer(entityID)
@@ -80,6 +165,7 @@ func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
 	if ctxSrc.createdEntity != entityID {
 		t.Error("CreateEntity called with wrong entity ID. ", ctxSrc.createdEntity, " != ", entityID)
 	}
+
 }
 
 func TestThatProblemsAreReportedWithCorrectContentType(t *testing.T) {
@@ -305,6 +391,7 @@ func newContextRegistryWithSourceForType(typeName string) (ContextRegistry, *moc
 }
 
 func newEntityAsByteBuffer(entityID string) (io.Reader, string) {
+
 	device := fiware.NewDevice(entityID, "")
 	jsonBytes, _ := json.Marshal(device)
 	return bytes.NewBuffer(jsonBytes), device.Type
