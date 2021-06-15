@@ -95,6 +95,25 @@ func ReportNewInternalError(w http.ResponseWriter, detail string) {
 	ie.WriteResponse(w)
 }
 
+type UnauthorizedRequest struct {
+	ProblemDetailsImpl
+}
+
+func NewUnauthorizedRequest(detail string) *UnauthorizedRequest {
+	return &UnauthorizedRequest{
+		ProblemDetailsImpl: ProblemDetailsImpl{
+			typ:    "https://uri.etsi.org/ngsi-ld/errors/UnauthorizedRequest",
+			title:  "Unauthorized Request",
+			detail: detail,
+		},
+	}
+}
+
+func ReportUnauthorizedRequest(w http.ResponseWriter, detail string) {
+	ur := NewUnauthorizedRequest(detail)
+	ur.WriteResponse(w)
+}
+
 //ContentType returns the ContentType to be used when returning this problem
 func (p *ProblemDetailsImpl) ContentType() string {
 	return ProblemReportContentType
@@ -119,6 +138,11 @@ func (p *ProblemDetailsImpl) MarshalJSON() ([]byte, error) {
 
 //ResponseCode returns the HTTP response code to be used when returning a specific problem
 func (p *ProblemDetailsImpl) ResponseCode() int {
+
+	if p.typ == "https://uri.etsi.org/ngsi-ld/errors/UnauthorizedRequest" {
+		return http.StatusUnauthorized
+	}
+
 	return http.StatusBadRequest
 }
 
