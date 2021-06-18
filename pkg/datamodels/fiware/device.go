@@ -1,6 +1,8 @@
 package fiware
 
 import (
+	"bytes"
+	"encoding/json"
 	"strings"
 
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
@@ -14,7 +16,17 @@ type Device struct {
 	DateLastValueReported *ngsi.DateTimeProperty         `json:"dateLastValueReported,omitempty"`
 	DateCreated           *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
-	Location              *geojson.GeoJSONProperty       `json:"location,omitempty"`
+	Location              geojson.GeoJSONProperty        `json:"location,omitempty"`
+	RefDeviceModel        *ngsi.SingleObjectRelationship `json:"refDeviceModel,omitempty"`
+}
+
+type deviceDTO struct {
+	ngsi.BaseEntity
+	Value                 *ngsi.TextProperty             `json:"value"`
+	DateLastValueReported *ngsi.DateTimeProperty         `json:"dateLastValueReported,omitempty"`
+	DateCreated           *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
+	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
+	Location              json.RawMessage                `json:"location,omitempty"`
 	RefDeviceModel        *ngsi.SingleObjectRelationship `json:"refDeviceModel,omitempty"`
 }
 
@@ -48,4 +60,28 @@ func CreateDeviceRelationshipFromDevice(device string) *ngsi.SingleObjectRelatio
 	}
 
 	return ngsi.NewSingleObjectRelationship(device)
+}
+
+func (d *Device) UnmarshalJSON(data []byte) error {
+	dto := &deviceDTO{}
+	err := json.NewDecoder(bytes.NewReader(data)).Decode(dto)
+
+	if err == nil {
+		d.ID = dto.ID
+		d.Type = dto.Type
+
+		d.Value = dto.Value
+		d.DateLastValueReported = dto.DateLastValueReported
+
+		d.DateCreated = dto.DateCreated
+		d.DateModified = dto.DateModified
+
+		d.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+
+		d.RefDeviceModel = dto.RefDeviceModel
+
+		d.Context = dto.Context
+	}
+
+	return err
 }
