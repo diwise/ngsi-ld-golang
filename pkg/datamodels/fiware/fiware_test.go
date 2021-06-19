@@ -46,7 +46,7 @@ func TestDeviceModel(t *testing.T) {
 	// test devicemodel categories are as expected
 }
 
-func TestUnmarshalJSONToDevice(t *testing.T) {
+func TestUnmarshalJSONToDeviceHasCorrectLocation(t *testing.T) {
 	device := Device{}
 
 	err := json.Unmarshal([]byte(jsonStr), &device)
@@ -54,7 +54,22 @@ func TestUnmarshalJSONToDevice(t *testing.T) {
 		t.Error("Expectation failed. Could not unmarshal json string into device")
 	}
 
-	fmt.Print(device)
+	if device.Location.GetAsPoint().Coordinates != [2]float64{17.3069, 62.3908} {
+		t.Error("Expectation failed. Value of location does not match expected value")
+	}
+}
+
+func TestUnmarshalJSONToDeviceWithEmptyLocation(t *testing.T) {
+	device := Device{}
+
+	err := json.Unmarshal([]byte(jsonStrNoLocation), &device)
+	if err != nil {
+		t.Error("Expectation failed. Could not unmarshal json string into device")
+	}
+
+	if device.Location != nil {
+		t.Error("Expectation failed. Location should be empty")
+	}
 }
 
 func TestTrafficFlowObserved(t *testing.T) {
@@ -92,5 +107,22 @@ const jsonStr string = `{
 			],
 			"type": "Point"
 		}
+	}
+}`
+
+const jsonStrNoLocation string = `{
+	"@context": [
+		  "https://schema.lab.fiware.org/ld/context",
+		  "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld"
+	],
+	"id": "urn:ngsi-ld:Device:device",
+	"refDeviceModel": {
+		  "object": "urn:ngsi-ld:DeviceModel:myDevice",
+		  "type": "Relationship"
+	},
+	"type": "Device",
+	"value": {
+		  "type": "Property",
+		  "value": "38"
 	}
 }`
