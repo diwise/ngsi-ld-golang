@@ -76,7 +76,7 @@ func (d *Device) UnmarshalJSON(data []byte) error {
 		d.DateCreated = dto.DateCreated
 		d.DateModified = dto.DateModified
 
-		if d.Location != nil {
+		if dto.Location != nil {
 			d.Location = geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
 		}
 

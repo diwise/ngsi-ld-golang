@@ -1,6 +1,7 @@
 package fiware
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -45,6 +46,17 @@ func TestDeviceModel(t *testing.T) {
 	// test devicemodel categories are as expected
 }
 
+func TestUnmarshalJSONToDevice(t *testing.T) {
+	device := Device{}
+
+	err := json.Unmarshal([]byte(jsonStr), &device)
+	if err != nil {
+		t.Error("Expectation failed. Could not unmarshal json string into device")
+	}
+
+	fmt.Print(device)
+}
+
 func TestTrafficFlowObserved(t *testing.T) {
 	id := TrafficFlowObservedIDPrefix + "trafficFlowObservedID"
 	location := [2]float64{1.0, 1.0}
@@ -54,5 +66,31 @@ func TestTrafficFlowObserved(t *testing.T) {
 	if tfo == nil {
 		t.Error("Expectation failed. TrafficFlowObserved is empty")
 	}
-
 }
+
+const jsonStr string = `{
+	"@context": [
+		  "https://schema.lab.fiware.org/ld/context",
+		  "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld"
+	],
+	"id": "urn:ngsi-ld:Device:device",
+	"refDeviceModel": {
+		  "object": "urn:ngsi-ld:DeviceModel:myDevice",
+		  "type": "Relationship"
+	},
+	"type": "Device",
+	"value": {
+		  "type": "Property",
+		  "value": "38"
+	},
+	"location": {
+		"type": "GeoProperty",
+		"value": {
+			"coordinates": [
+				17.3069,
+				62.3908
+			],
+			"type": "Point"
+		}
+	}
+}`
