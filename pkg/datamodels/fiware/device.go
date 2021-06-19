@@ -16,7 +16,7 @@ type Device struct {
 	DateLastValueReported *ngsi.DateTimeProperty         `json:"dateLastValueReported,omitempty"`
 	DateCreated           *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
-	Location              geojson.GeoJSONProperty        `json:"location,omitempty"`
+	Location              *geojson.GeoJSONProperty       `json:"location,omitempty"`
 	RefDeviceModel        *ngsi.SingleObjectRelationship `json:"refDeviceModel,omitempty"`
 }
 
@@ -76,7 +76,9 @@ func (d *Device) UnmarshalJSON(data []byte) error {
 		d.DateCreated = dto.DateCreated
 		d.DateModified = dto.DateModified
 
-		d.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+		if d.Location != nil {
+			d.Location = geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+		}
 
 		d.RefDeviceModel = dto.RefDeviceModel
 
