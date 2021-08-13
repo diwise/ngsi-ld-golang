@@ -111,8 +111,20 @@ func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	})
 }
 
+type UpdateEntityAttributesCompletionCallback func(entityID string, request Request)
+
 //NewUpdateEntityAttributesHandler handles PATCH requests for NGSI entitity attributes
 func NewUpdateEntityAttributesHandler(ctxReg ContextRegistry) http.HandlerFunc {
+	noop := func(string, Request) {}
+	return NewUpdateEntityAttributesHandlerWithCallback(ctxReg, noop)
+}
+
+//NewUpdateEntityAttributesHandlerWithCallback handles PATCH requests for NGSI entitity
+//attributes and calls a callback on successful completion
+func NewUpdateEntityAttributesHandlerWithCallback(
+	ctxReg ContextRegistry,
+	onsuccess UpdateEntityAttributesCompletionCallback) http.HandlerFunc {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// TODO: Replace this string manipulation with a callback that can use the http router's
@@ -145,6 +157,9 @@ func NewUpdateEntityAttributesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 				return
 			}
 		}
+
+		// Call the success callback with the ID of the updated entity and the request instance
+		onsuccess(entityID, request)
 
 		w.WriteHeader(http.StatusNoContent)
 	})
