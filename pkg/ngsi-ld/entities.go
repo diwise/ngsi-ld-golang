@@ -166,8 +166,18 @@ func NewUpdateEntityAttributesHandlerWithCallback(
 	})
 }
 
+type CreateEntityCompletionCallback func(entityType, entityID string, request Request)
+
 //NewCreateEntityHandler handles incoming POST requests for NGSI entities
 func NewCreateEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
+	noop := func(string, string, Request) {}
+	return NewCreateEntityHandlerWithCallback(ctxReg, noop)
+}
+
+func NewCreateEntityHandlerWithCallback(
+	ctxReg ContextRegistry,
+	onsuccess CreateEntityCompletionCallback) http.HandlerFunc {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := newRequestWrapper(r)
 
@@ -197,6 +207,8 @@ func NewCreateEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 				return
 			}
 		}
+
+		onsuccess(entity.Type, entity.ID, request)
 
 		w.WriteHeader(http.StatusCreated)
 	})
