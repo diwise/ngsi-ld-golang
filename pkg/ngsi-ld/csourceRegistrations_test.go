@@ -142,6 +142,20 @@ func TestThatGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
 	}
 }
 
+func TestThatProvidedTypeCanBeExtractedFromMatchingID(t *testing.T) {
+
+	const expectedType string = "Road"
+	regex := fmt.Sprintf("^urn:ngsi-ld:%s:.+", expectedType)
+	registration, _ := NewCsourceRegistration(expectedType, []string{}, "", &regex)
+	contextSource, _ := NewRemoteContextSource(registration)
+
+	entityType, _ := contextSource.GetProvidedTypeFromID(fmt.Sprintf("urn:ngsi-ld:%s:myid", expectedType))
+
+	if entityType != expectedType {
+		t.Errorf("provided type %s does not match expectation (%s)", entityType, expectedType)
+	}
+}
+
 const beachResponseJSON string = `{"type": "FeatureCollection","features": [
 	{"id":"urn:ngsi-ld:Beach:42","type": "Feature",
 	"geometry": {

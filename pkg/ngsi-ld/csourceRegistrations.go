@@ -18,6 +18,7 @@ import (
 //CsourceRegistration is a wrapper for information about a registered context source
 type CsourceRegistration interface {
 	Endpoint() string
+	GetProvidedTypeFromID(entityID string) (string, error)
 	ProvidesAttribute(attributeName string) bool
 	ProvidesEntitiesWithMatchingID(entityID string) bool
 	ProvidesType(typeName string) bool
@@ -188,6 +189,13 @@ func (rcs *remoteContextSource) ProvidesEntitiesWithMatchingID(entityID string) 
 	return rcs.registration.ProvidesEntitiesWithMatchingID(entityID)
 }
 
+func (rcs *remoteContextSource) GetProvidedTypeFromID(entityID string) (string, error) {
+	if !rcs.registration.ProvidesEntitiesWithMatchingID(entityID) {
+		return "", fmt.Errorf("provided id not supported by this context source")
+	}
+	return rcs.registration.GetProvidedTypeFromID(entityID)
+}
+
 func (rcs *remoteContextSource) ProvidesType(typeName string) bool {
 	return rcs.registration.ProvidesType(typeName)
 }
@@ -259,6 +267,17 @@ type ctxSrcReg struct {
 
 func (csr *ctxSrcReg) Endpoint() string {
 	return csr.Endpt
+}
+
+func (csr *ctxSrcReg) GetProvidedTypeFromID(entityID string) (string, error) {
+	for _, reginfo := range csr.Information {
+		for _, entity := range reginfo.Entities {
+			if entity.regexpForID != nil && entity.regexpForID.MatchString(entityID) {
+				return entity.Type, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("provided ID %s not handled by this context source registration", entityID)
 }
 
 func (csr *ctxSrcReg) ProvidesAttribute(attributeName string) bool {

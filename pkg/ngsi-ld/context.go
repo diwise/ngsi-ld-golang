@@ -77,6 +77,7 @@ func (r *registry) Register(source ContextSource) {
 type ContextSource interface {
 	ProvidesAttribute(attributeName string) bool
 	ProvidesEntitiesWithMatchingID(entityID string) bool
+	GetProvidedTypeFromID(entityID string) (string, error)
 	ProvidesType(typeName string) bool
 
 	CreateEntity(typeName, entityID string, request Request) error

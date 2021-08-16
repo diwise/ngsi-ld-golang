@@ -111,11 +111,11 @@ func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	})
 }
 
-type UpdateEntityAttributesCompletionCallback func(entityID string, request Request)
+type UpdateEntityAttributesCompletionCallback func(entityType, entityID string, request Request)
 
 //NewUpdateEntityAttributesHandler handles PATCH requests for NGSI entitity attributes
 func NewUpdateEntityAttributesHandler(ctxReg ContextRegistry) http.HandlerFunc {
-	noop := func(string, Request) {}
+	noop := func(string, string, Request) {}
 	return NewUpdateEntityAttributesHandlerWithCallback(ctxReg, noop)
 }
 
@@ -150,16 +150,17 @@ func NewUpdateEntityAttributesHandlerWithCallback(
 			return
 		}
 
-		for _, source := range contextSources {
-			err := source.UpdateEntityAttributes(entityID, request)
-			if err != nil {
-				errors.ReportNewInvalidRequest(w, "Unable to update entity attributes: "+err.Error())
-				return
-			}
+		err := contextSources[0].UpdateEntityAttributes(entityID, request)
+		if err != nil {
+			errors.ReportNewInvalidRequest(w, "Unable to update entity attributes: "+err.Error())
+			return
 		}
 
-		// Call the success callback with the ID of the updated entity and the request instance
-		onsuccess(entityID, request)
+		entityType, err := contextSources[0].GetProvidedTypeFromID(entityID)
+		if err == nil {
+			// Call the success callback with the type and ID of the updated entity and the request instance
+			onsuccess(entityType, entityID, request)
+		}
 
 		w.WriteHeader(http.StatusNoContent)
 	})

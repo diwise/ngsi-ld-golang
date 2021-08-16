@@ -461,6 +461,10 @@ func (s *mockCtxSource) ProvidesEntitiesWithMatchingID(entityID string) bool {
 	return true
 }
 
+func (s *mockCtxSource) GetProvidedTypeFromID(entityID string) (string, error) {
+	return "", errors.New("not implemented")
+}
+
 func (s *mockCtxSource) ProvidesType(typeName string) bool {
 	return s.typeName == typeName
 }
