@@ -213,11 +213,11 @@ func (gjpp *GeoJSONPropertyPoint) GetAsPoint() GeoJSONPropertyPoint {
 	}
 }
 
-func (gjpp *GeoJSONPropertyPoint) Latitude() float64 {
+func (gjpp GeoJSONPropertyPoint) Latitude() float64 {
 	return gjpp.Coordinates[1]
 }
 
-func (gjpp *GeoJSONPropertyPoint) Longitude() float64 {
+func (gjpp GeoJSONPropertyPoint) Longitude() float64 {
 	return gjpp.Coordinates[0]
 }
 
