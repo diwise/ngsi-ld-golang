@@ -12,7 +12,7 @@ import (
 //TrafficFlowObserved is a Fiware entity
 type TrafficFlowObserved struct {
 	ngsi.BaseEntity
-	DateObserved        ngsi.DateTimeProperty          `json:"dateObserved"`
+	DateObserved        ngsi.TextProperty              `json:"dateObserved"`
 	DateCreated         *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified        *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObservedTo      *ngsi.DateTimeProperty         `json:"dateObservedTo,omitempty"`
@@ -26,7 +26,7 @@ type TrafficFlowObserved struct {
 
 type trafficFlowObservedDTO struct {
 	ngsi.BaseEntity
-	DateObserved        ngsi.DateTimeProperty          `json:"dateObserved"`
+	DateObserved        ngsi.TextProperty              `json:"dateObserved"`
 	DateCreated         *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified        *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObservedTo      *ngsi.DateTimeProperty         `json:"dateObservedTo,omitempty"`
@@ -44,7 +44,7 @@ func NewTrafficFlowObserved(id string, latitude float64, longitude float64, obse
 		id = TrafficFlowObservedIDPrefix + id
 	}
 
-	dateTimeValue := ngsi.CreateDateTimeProperty(observedAt)
+	dateTimeValue := ngsi.NewTextProperty(observedAt)
 	lane := ngsi.NewNumberPropertyFromInt(laneID)
 	intense := ngsi.NewNumberPropertyFromInt(intensity)
 

@@ -64,10 +64,7 @@ const tfoStr string = `{
     "type": "TrafficFlowObserved",
     "dateObserved": {
         "type": "Property",
-        "value": {
-            "@type": "DateTime",
-            "@value": "2016-12-07T11:10:00Z"
-        }
+        "value": "2016-12-07T11:10:00Z"
     },
     "dateObservedFrom": {
         "type": "Property",
