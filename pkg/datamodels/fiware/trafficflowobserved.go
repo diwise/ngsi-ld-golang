@@ -39,7 +39,7 @@ type trafficFlowObservedDTO struct {
 }
 
 //NewTrafficFlowObserved creates a new TrafficFlowObserved from given ID
-func NewTrafficFlowObserved(id string, latitude float64, longitude float64, observedAt string, laneID int, intensity int) *TrafficFlowObserved {
+func NewTrafficFlowObserved(id string, observedAt string, laneID int, intensity int) *TrafficFlowObserved {
 	if !strings.HasPrefix(id, TrafficFlowObservedIDPrefix) {
 		id = TrafficFlowObservedIDPrefix + id
 	}
@@ -50,7 +50,6 @@ func NewTrafficFlowObserved(id string, latitude float64, longitude float64, obse
 
 	return &TrafficFlowObserved{
 		DateObserved: *dateTimeValue,
-		Location:     geojson.CreateGeoJSONPropertyFromWGS84(longitude, latitude),
 		LaneID:       lane,
 		Intensity:    intense,
 		BaseEntity: ngsi.BaseEntity{
