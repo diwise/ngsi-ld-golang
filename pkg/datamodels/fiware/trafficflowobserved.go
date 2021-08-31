@@ -17,7 +17,7 @@ type TrafficFlowObserved struct {
 	DateModified        *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObservedTo      *ngsi.DateTimeProperty         `json:"dateObservedTo,omitempty"`
 	DateObservedFrom    *ngsi.DateTimeProperty         `json:"dateObservedFrom,omitempty"`
-	Location            geojson.GeoJSONProperty        `json:"location,omitempty"`
+	Location            *geojson.GeoJSONProperty       `json:"location,omitempty"`
 	LaneID              *ngsi.NumberProperty           `json:"laneID"`
 	AverageVehicleSpeed *ngsi.NumberProperty           `json:"averageVehicleSpeed,omitempty"`
 	Intensity           *ngsi.NumberProperty           `json:"intensity,omitempty"`
@@ -50,7 +50,7 @@ func NewTrafficFlowObserved(id string, latitude float64, longitude float64, obse
 
 	return &TrafficFlowObserved{
 		DateObserved: *dateTimeValue,
-		Location:     *geojson.CreateGeoJSONPropertyFromWGS84(longitude, latitude),
+		Location:     geojson.CreateGeoJSONPropertyFromWGS84(longitude, latitude),
 		LaneID:       lane,
 		Intensity:    intense,
 		BaseEntity: ngsi.BaseEntity{
@@ -86,7 +86,7 @@ func (tfo *TrafficFlowObserved) UnmarshalJSON(data []byte) error {
 		tfo.Context = dto.Context
 
 		if dto.Location != nil {
-			tfo.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+			tfo.Location = geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
 		}
 	}
 
