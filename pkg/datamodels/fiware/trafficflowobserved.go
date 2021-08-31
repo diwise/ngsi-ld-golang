@@ -85,8 +85,9 @@ func (tfo *TrafficFlowObserved) UnmarshalJSON(data []byte) error {
 
 		tfo.Context = dto.Context
 
-		tfo.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
-
+		if dto.Location != nil {
+			tfo.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+		}
 	}
 
 	return err
