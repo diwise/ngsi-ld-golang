@@ -17,11 +17,20 @@ type Request interface {
 
 func newRequestWrapper(req *http.Request) Request {
 	rw := &requestWrapper{request: req}
+
+	if req.Body != nil {
+		// Read the request body and store it in the wrapper
+		rw.body, _ = ioutil.ReadAll(req.Body)
+		// Restore the body so that others can read it
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(rw.body))
+	}
+
 	return rw
 }
 
 type requestWrapper struct {
 	request *http.Request
+	body    []byte
 }
 
 func (r *requestWrapper) Request() *http.Request {
@@ -29,14 +38,8 @@ func (r *requestWrapper) Request() *http.Request {
 }
 
 func (r *requestWrapper) BodyReader() io.Reader {
-	req := r.Request()
-
-	// Request bodies can only be read once, so read the request's body ...
-	buf, _ := ioutil.ReadAll(req.Body)
-	// ... and replace it with a new reader with the same contents ...
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
-	// ... before returning yet another new reader to the caller
-	return ioutil.NopCloser(bytes.NewBuffer(buf))
+	// Return a new reader with a copy of our stored request body
+	return ioutil.NopCloser(bytes.NewBuffer(r.body))
 }
 
 func (r *requestWrapper) DecodeBodyInto(v interface{}) error {
