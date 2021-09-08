@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,7 @@ import (
 	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
 	ngsierrors "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/matryer/is"
 )
 
 func createURL(path string, params ...string) string {
@@ -109,13 +111,12 @@ const tfoStr string = `{
 }`
 
 func TestCreateEntityWorksForTrafficFlowObserved(t *testing.T) {
+	is := is.New(t)
 	entityID := fiware.TrafficFlowObservedIDPrefix + "TrafficFlowObserved"
 	tfo := fiware.TrafficFlowObserved{}
 
 	err := json.Unmarshal([]byte(tfoStr), &tfo)
-	if err != nil {
-		t.Errorf("failed to unmarshal into struct: %s", err)
-	}
+	is.NoErr(err)
 
 	jsonBytes, _ := json.Marshal(tfo)
 	byteReader := bytes.NewBuffer(jsonBytes)
@@ -128,20 +129,13 @@ func TestCreateEntityWorksForTrafficFlowObserved(t *testing.T) {
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
-	if w.Code != http.StatusCreated {
-		t.Error("Handler did not return the expected status code. ", w.Code, " != ", http.StatusCreated)
-	}
-
-	if ctxSrc.createdEntityType != typeName {
-		t.Error("CreateEntity called with wrong type name. ", ctxSrc.createdEntityType, " != ", typeName)
-	}
-
-	if ctxSrc.createdEntity != entityID {
-		t.Error("CreateEntity called with wrong entity ID. ", ctxSrc.createdEntity, " != ", entityID)
-	}
+	is.Equal(w.Code, http.StatusCreated)         // failed to create entity
+	is.Equal(ctxSrc.createdEntityType, typeName) // create entity called with wrong type name
+	is.Equal(ctxSrc.createdEntity, entityID)     // create entity called with wrong entity id
 }
 
 func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
+	is := is.New(t)
 	entityID := fiware.DeviceIDPrefix + "livboj"
 	byteReader, typeName := newEntityAsByteBuffer(entityID)
 	req, _ := http.NewRequest("POST", createURL("/entities"), byteReader)
@@ -151,21 +145,14 @@ func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
-	if w.Code != http.StatusCreated {
-		t.Error("Handler did not return the expected status code. ", w.Code, " != ", http.StatusCreated)
-	}
-
-	if ctxSrc.createdEntityType != typeName {
-		t.Error("CreateEntity called with wrong type name. ", ctxSrc.createdEntityType, " != ", typeName)
-	}
-
-	if ctxSrc.createdEntity != entityID {
-		t.Error("CreateEntity called with wrong entity ID. ", ctxSrc.createdEntity, " != ", entityID)
-	}
+	is.Equal(w.Code, http.StatusCreated)         // failed to create entity
+	is.Equal(ctxSrc.createdEntityType, typeName) // create entity called with wrong type name
+	is.Equal(ctxSrc.createdEntity, entityID)     // create entity called with wrong entity id
 
 }
 
 func TestThatProblemsAreReportedWithCorrectContentType(t *testing.T) {
+	is := is.New(t)
 	byteBuffer, _ := newEntityAsByteBuffer("id")
 	req, _ := http.NewRequest("POST", createURL("/entities"), byteBuffer)
 	w := httptest.NewRecorder()
@@ -179,26 +166,23 @@ func TestThatProblemsAreReportedWithCorrectContentType(t *testing.T) {
 		t.Errorf("Response returned %d content types. Expected 1!", len(contentTypes))
 	} else {
 		contentType := contentTypes[0]
-		expected := ngsierrors.ProblemReportContentType
-		if strings.Compare(contentType, expected) != 0 {
-			t.Errorf("Wrong content type when reporting error. %s is not %s!", contentType, expected)
-		}
+		is.Equal(contentType, ngsierrors.ProblemReportContentType) // problem reported with wrong content type
 	}
 }
 
 func TestCreateEntityFailsWithNoContextSources(t *testing.T) {
+	is := is.New(t)
 	byteBuffer, _ := newEntityAsByteBuffer("id")
 	req, _ := http.NewRequest("POST", createURL("/entities"), byteBuffer)
 	w := httptest.NewRecorder()
 
 	NewCreateEntityHandler(NewContextRegistry()).ServeHTTP(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Error("Wrong response code when posting device with no context sources. ", w.Code, " is not ", http.StatusBadRequest)
-	}
+	is.Equal(w.Code, http.StatusBadRequest) // wrong response code when posting device with no context sources.
 }
 
 func TestCreateEntityHandlesFailureFromContextSource(t *testing.T) {
+	is := is.New(t)
 	byteBuffer, typeName := newEntityAsByteBuffer("id")
 	req, _ := http.NewRequest("POST", createURL("/entities"), byteBuffer)
 	w := httptest.NewRecorder()
@@ -208,23 +192,22 @@ func TestCreateEntityHandlesFailureFromContextSource(t *testing.T) {
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Error("Wrong response code when posting device with no context sources. ", w.Code, " is not ", http.StatusBadRequest)
-	}
+	is.Equal(w.Code, http.StatusBadRequest) // wrong response code when create entity fails.
 }
 
 func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
+	is := is.New(t)
 	req, _ := http.NewRequest("GET", createURL("/entitites"), nil)
 	w := httptest.NewRecorder()
 
 	NewQueryEntitiesHandler(NewContextRegistry()).ServeHTTP(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Error("GET /entities MUST require either type or attrs request parameter")
-	}
+	is.Equal(w.Code, http.StatusBadRequest) // wrong response code when type and attrs are missing.
 }
 
 func TestGetEntitiesWithAttribute(t *testing.T) {
+	is := is.New(t)
+
 	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight"), nil)
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -235,12 +218,12 @@ func TestGetEntitiesWithAttribute(t *testing.T) {
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Error("That did not work .... :(")
-	}
+	is.Equal(w.Code, http.StatusOK) // failed to get entity by attribute
 }
 
 func TestGetEntitiesForDevice(t *testing.T) {
+	is := is.New(t)
+
 	deviceID := fiware.DeviceIDPrefix + "mydevice"
 	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight", "q=refDevice==\""+deviceID+"\""), nil)
 	w := httptest.NewRecorder()
@@ -250,14 +233,13 @@ func TestGetEntitiesForDevice(t *testing.T) {
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if contextSource.queriedDevice != deviceID {
-		t.Error("Queried device did not match expectations. ", contextSource.queriedDevice, " != ", deviceID)
-	} else if w.Code != http.StatusOK {
-		t.Error("That did not work ... :(")
-	}
+	is.Equal(contextSource.queriedDevice, deviceID) // queried device did not match expectations
+	is.Equal(w.Code, http.StatusOK)                 // unexpected response code
 }
 
 func TestGetEntitiesWithGeoQueryNearPoint(t *testing.T) {
+	is := is.New(t)
+
 	req, _ := http.NewRequest("GET", createURL(
 		"/entitites",
 		"type=RoadSegment",
@@ -272,34 +254,23 @@ func TestGetEntitiesWithGeoQueryNearPoint(t *testing.T) {
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if w.Code != 200 {
-		t.Error("Unexpected response code", w.Code, w.Body.String())
-		return
-	}
+	is.Equal(w.Code, http.StatusOK) // unexpected response code
 
 	query := contextSource.generatedQuery
-	if query.IsGeoQuery() == false {
-		t.Error("Expected a GeoQuery from the QueryEntititesHandler")
-	} else {
-		geo := query.Geo()
+	is.True(query.IsGeoQuery()) // expected a geo query from QueryEntitiesHandler
 
-		if geo.GeoRel != "near" {
-			t.Error("Geospatial relation not correctly saved in geo query (" + geo.GeoRel + " != near)")
-		}
+	geo := query.Geo()
+	is.Equal(geo.GeoRel, "near") // geospatial relation not correctly saved in geo query
 
-		distance, _ := geo.Distance()
-		if distance != 2000 {
-			t.Error("Unexpected near distance parsed from geo query:", distance, "!=", 2000)
-		}
+	distance, _ := geo.Distance()
+	is.Equal(distance, uint32(2000)) // unexpected near distance parsed from geo query
 
-		x, y, _ := geo.Point()
-		if x != 8 || y != 40 {
-			t.Error("Mismatching point: (", x, ",", y, ") != ( 8 , 40 )")
-		}
-	}
+	x, y, _ := geo.Point()
+	is.Equal(fmt.Sprintf("(%.1f,%.1f)", x, y), "(8.0,40.0)") // mismatching point
 }
 
 func TestGetEntitiesWithGeoQueryWithinRect(t *testing.T) {
+	is := is.New(t)
 	req, _ := http.NewRequest("GET", createURL(
 		"/entitites",
 		"type=RoadSegment",
@@ -314,29 +285,20 @@ func TestGetEntitiesWithGeoQueryWithinRect(t *testing.T) {
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if w.Code != 200 {
-		t.Error("Handler failed with exit code", w.Code, w.Body.String())
-		return
-	}
+	is.Equal(w.Code, http.StatusOK) // unexpected response code
 
 	query := contextSource.generatedQuery
-	if query.IsGeoQuery() == false {
-		t.Error("Expected a GeoQuery from the QueryEntititesHandler")
-	} else {
-		geo := query.Geo()
+	is.True(query.IsGeoQuery()) // expected a GeoQuery from the QueryEntititesHandler
 
-		if geo.GeoRel != "within" {
-			t.Error("Geospatial relation not correctly saved in geo query (" + geo.GeoRel + " != within)")
-		}
+	geo := query.Geo()
+	is.Equal(geo.GeoRel, "within") // geospatial relation not correctly saved in geo query
 
-		lon0, lat0, lon1, lat1, _ := geo.Rectangle()
-		if lon0 != 8 || lat0 != 40 || lon1 != 10 || lat1 != 42 {
-			t.Error("Bad coordinates in GeoQuery rect")
-		}
-	}
+	lon0, lat0, lon1, lat1, _ := geo.Rectangle()
+	is.Equal(fmt.Sprintf("[(%.1f,%.1f),(%.1f,%.1f)]", lat0, lon0, lat1, lon1), "[(40.0,8.0),(42.0,10.0)]") // bad coordinates in GeoQuery rect
 }
 
 func TestRetrieveEntity(t *testing.T) {
+	is := is.New(t)
 	deviceID := fiware.DeviceIDPrefix + "mydevice"
 	req, _ := http.NewRequest("GET", createURL("/entities/"+deviceID), nil)
 	w := httptest.NewRecorder()
@@ -346,16 +308,13 @@ func TestRetrieveEntity(t *testing.T) {
 
 	NewRetrieveEntityHandler(contextRegistry).ServeHTTP(w, req)
 
-	if contextSource.retrievedEntity != deviceID {
-		t.Errorf("DeviceID %s does not match retrievedEntity %s", deviceID, contextSource.retrievedEntity)
-	}
-
-	if w.Code != http.StatusOK {
-		t.Error("Something went wrong.")
-	}
+	is.Equal(contextSource.retrievedEntity, deviceID) // DeviceID does not match retrievedEntity
+	is.Equal(w.Code, http.StatusOK)                   // unexpected response code
 }
 
 func TestUpdateEntitityAttributes(t *testing.T) {
+	is := is.New(t)
+
 	deviceID := fiware.DeviceIDPrefix + "mydevice"
 	jsonBytes, _ := json.Marshal(e("testvalue"))
 
@@ -367,9 +326,7 @@ func TestUpdateEntitityAttributes(t *testing.T) {
 
 	NewUpdateEntityAttributesHandler(contextRegistry).ServeHTTP(w, req)
 
-	if contextSource.patchedEntity != deviceID {
-		t.Error("Patched entity did not match expectations. ", contextSource.patchedEntity, " != ", deviceID)
-	}
+	is.Equal(contextSource.patchedEntity, deviceID) // patched entity did not match expectations.
 }
 
 type mockEntity struct {
