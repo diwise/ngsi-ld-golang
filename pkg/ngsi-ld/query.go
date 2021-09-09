@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //Query is an interface to be used when passing queries to context registries and sources
@@ -17,7 +18,10 @@ type Query interface {
 	PaginationOffset() uint64
 
 	IsGeoQuery() bool
-	Geo() *GeoQuery
+	Geo() GeoQuery
+
+	IsTemporalQuery() bool
+	Temporal() TemporalQuery
 
 	EntityAttributes() []string
 	EntityTypes() []string
@@ -30,6 +34,15 @@ const (
 	GeoSpatialRelationNearPoint = "near"
 	//GeoSpatialRelationWithinRect describes a relation as an overlapping polygon
 	GeoSpatialRelationWithinRect = "within"
+
+	//TemporalRelationAfterTime describes a relation where observedAt >= timeAt
+	TemporalRelationAfterTime = "after"
+	//TemporalRelationBeforeTime describes a relation where observedAt < timeAt
+	TemporalRelationBeforeTime = "before"
+	//TemporalRelationBetweenTimes describes a relation where timeAt <= observedAt < endTimeAt
+	TemporalRelationBetweenTimes = "between"
+	//TemporalRelationTimeProperty contains the temporal property to which the query can be applied
+	TemporalRelationTimeProperty = "timeproperty"
 
 	//QueryDefaultPaginationLimit defines the limit that should be used for GET operations
 	//when the client does not supply a value
@@ -73,6 +86,22 @@ func (gq *GeoQuery) Rectangle() (float64, float64, float64, float64, error) {
 	return 0, 0, 0, 0, fmt.Errorf("invalid number of coordinates in GeoQuery for a Polygon geometry")
 }
 
+type TemporalQuery struct {
+	timerel   string
+	timeAt    time.Time
+	endTimeAt time.Time
+
+	timeProperty string
+}
+
+func (tq TemporalQuery) Property() string {
+	return tq.timeProperty
+}
+
+func (tq TemporalQuery) TimeSpan() (time.Time, time.Time) {
+	return tq.timeAt, tq.endTimeAt
+}
+
 func newQueryFromParameters(req *http.Request, types []string, attributes []string, q string) (Query, error) {
 
 	var err error
@@ -111,6 +140,11 @@ func newQueryFromParameters(req *http.Request, types []string, attributes []stri
 	georel := req.URL.Query().Get("georel")
 	if len(georel) > 0 {
 		qw.geoQuery, err = newGeoQueryFromHTTPRequest(georel, req)
+	}
+
+	timerel := req.URL.Query().Get("timerel")
+	if len(timerel) > 0 {
+		qw.temporalQuery, err = newTemporalQueryFromHTTPRequest(timerel, req)
 	}
 
 	return qw, err
@@ -175,6 +209,56 @@ func newGeoQueryFromHTTPRequest(georel string, req *http.Request) (*GeoQuery, er
 	}
 
 	return nil, errors.New("only the geo-spatial relationships \"near\" and \"within\" are supported at this time")
+}
+
+func isNotValidTemporalRelation(timerel string) bool {
+	return timerel != TemporalRelationAfterTime &&
+		timerel != TemporalRelationBeforeTime &&
+		timerel != TemporalRelationBetweenTimes
+}
+
+func newTemporalQueryFromHTTPRequest(timerel string, req *http.Request) (*TemporalQuery, error) {
+	tq := &TemporalQuery{timerel: timerel, timeProperty: "observedAt"}
+
+	if isNotValidTemporalRelation(timerel) {
+		return nil, fmt.Errorf("temporal relation of type %s not supported", timerel)
+	}
+
+	timeAtStr := req.URL.Query().Get("timeAt")
+	if len(timeAtStr) == 0 {
+		return nil, errors.New("missing parameter timeAt")
+	}
+
+	timeAt, err := time.Parse(time.RFC3339, timeAtStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse timeAt from %s", timeAtStr)
+	}
+
+	// If this is a "before" relation, then timeAt marks the end of the span
+	if timerel == TemporalRelationBeforeTime {
+		tq.endTimeAt = timeAt
+	} else {
+		tq.timeAt = timeAt
+	}
+
+	if timerel == TemporalRelationBetweenTimes {
+		// "between" requires that the caller has included an endTimeAt parameter
+		endTimeAtStr := req.URL.Query().Get("endTimeAt")
+		if len(endTimeAtStr) == 0 {
+			return nil, errors.New("missing parameter endTimeAt")
+		}
+		tq.endTimeAt, err = time.Parse(time.RFC3339, endTimeAtStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse endTimeAt from %s", endTimeAtStr)
+		}
+	}
+
+	timeProperty := req.URL.Query().Get("timeproperty")
+	if len(timeProperty) > 0 {
+		tq.timeProperty = timeProperty
+	}
+
+	return tq, nil
 }
 
 func parseGeometryCoordinates(coordparameter string) ([]float64, error) {
@@ -285,7 +369,8 @@ type queryWrapper struct {
 	limit  uint64
 	offset uint64
 
-	geoQuery *GeoQuery
+	geoQuery      *GeoQuery
+	temporalQuery *TemporalQuery
 }
 
 func (q *queryWrapper) HasDeviceReference() bool {
@@ -293,11 +378,25 @@ func (q *queryWrapper) HasDeviceReference() bool {
 }
 
 func (q *queryWrapper) IsGeoQuery() bool {
-	return q.Geo() != nil
+	return q.geoQuery != nil
 }
 
-func (q *queryWrapper) Geo() *GeoQuery {
-	return q.geoQuery
+func (q *queryWrapper) Geo() GeoQuery {
+	if !q.IsGeoQuery() {
+		panic("Geo called on non geospatial Query")
+	}
+	return *q.geoQuery
+}
+
+func (q *queryWrapper) IsTemporalQuery() bool {
+	return q.temporalQuery != nil
+}
+
+func (q *queryWrapper) Temporal() TemporalQuery {
+	if !q.IsTemporalQuery() {
+		panic("Temporal called on non temporal Query")
+	}
+	return *q.temporalQuery
 }
 
 func (q *queryWrapper) Device() string {
