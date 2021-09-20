@@ -9,6 +9,8 @@ import (
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 //Entity is an informational representative of something that is supposed to exist in the real world, physically or conceptually
@@ -111,21 +113,26 @@ func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	})
 }
 
-type UpdateEntityAttributesCompletionCallback func(entityType, entityID string, request Request)
+type UpdateEntityAttributesCompletionCallback func(entityType, entityID string, request Request, logger zerolog.Logger)
 
 //NewUpdateEntityAttributesHandler handles PATCH requests for NGSI entitity attributes
 func NewUpdateEntityAttributesHandler(ctxReg ContextRegistry) http.HandlerFunc {
-	noop := func(string, string, Request) {}
-	return NewUpdateEntityAttributesHandlerWithCallback(ctxReg, noop)
+	noop := func(string, string, Request, zerolog.Logger) {}
+	return NewUpdateEntityAttributesHandlerWithCallback(
+		ctxReg, log.With().Logger(), noop,
+	)
 }
 
 //NewUpdateEntityAttributesHandlerWithCallback handles PATCH requests for NGSI entitity
 //attributes and calls a callback on successful completion
 func NewUpdateEntityAttributesHandlerWithCallback(
 	ctxReg ContextRegistry,
+	logger zerolog.Logger,
 	onsuccess UpdateEntityAttributesCompletionCallback) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		logger = decorateLogger(r, logger)
 
 		// TODO: Replace this string manipulation with a callback that can use the http router's
 		//		 functionality to extract URL params ...
@@ -159,26 +166,30 @@ func NewUpdateEntityAttributesHandlerWithCallback(
 		entityType, err := contextSources[0].GetProvidedTypeFromID(entityID)
 		if err == nil {
 			// Call the success callback with the type and ID of the updated entity and the request instance
-			onsuccess(entityType, entityID, request)
+			onsuccess(entityType, entityID, request, logger)
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	})
 }
 
-type CreateEntityCompletionCallback func(entityType, entityID string, request Request)
+type CreateEntityCompletionCallback func(entityType, entityID string, request Request, logger zerolog.Logger)
 
 //NewCreateEntityHandler handles incoming POST requests for NGSI entities
 func NewCreateEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
-	noop := func(string, string, Request) {}
-	return NewCreateEntityHandlerWithCallback(ctxReg, noop)
+	noop := func(string, string, Request, zerolog.Logger) {}
+	return NewCreateEntityHandlerWithCallback(ctxReg, log.With().Logger(), noop)
 }
 
 func NewCreateEntityHandlerWithCallback(
 	ctxReg ContextRegistry,
+	logger zerolog.Logger,
 	onsuccess CreateEntityCompletionCallback) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		logger = decorateLogger(r, logger)
+
 		request := newRequestWrapper(r)
 
 		entity := &types.BaseEntity{}
@@ -208,7 +219,7 @@ func NewCreateEntityHandlerWithCallback(
 			}
 		}
 
-		onsuccess(entity.Type, entity.ID, request)
+		onsuccess(entity.Type, entity.ID, request, logger)
 
 		w.WriteHeader(http.StatusCreated)
 	})
@@ -260,4 +271,28 @@ func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 		w.Header().Add("Content-Type", "application/ld+json;charset=utf-8")
 		w.Write(bytes)
 	})
+}
+
+//decorateLogger looks for b3 trace headers and adds them to the logger if found
+func decorateLogger(r *http.Request, logger zerolog.Logger) zerolog.Logger {
+	traceHeaders := []string{
+		http.CanonicalHeaderKey("x-b3-traceid"),
+		http.CanonicalHeaderKey("x-b3-parentspanid"),
+		http.CanonicalHeaderKey("x-b3-spanid"),
+	}
+	_, ok := r.Header[traceHeaders[0]]
+
+	if ok {
+		ctx := logger.With().Str("traceID", r.Header[traceHeaders[0]][0])
+
+		for _, hdr := range traceHeaders {
+			if len(r.Header[hdr]) > 0 {
+				ctx = ctx.Str(strings.ToLower(hdr), r.Header[hdr][0])
+			}
+		}
+
+		logger = ctx.Logger()
+	}
+
+	return logger
 }
