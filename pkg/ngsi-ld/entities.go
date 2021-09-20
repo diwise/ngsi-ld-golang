@@ -132,7 +132,7 @@ func NewUpdateEntityAttributesHandlerWithCallback(
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		logger = decorateLogger(r, logger)
+		sublogger := decorateLogger(r, logger)
 
 		// TODO: Replace this string manipulation with a callback that can use the http router's
 		//		 functionality to extract URL params ...
@@ -166,7 +166,7 @@ func NewUpdateEntityAttributesHandlerWithCallback(
 		entityType, err := contextSources[0].GetProvidedTypeFromID(entityID)
 		if err == nil {
 			// Call the success callback with the type and ID of the updated entity and the request instance
-			onsuccess(entityType, entityID, request, logger)
+			onsuccess(entityType, entityID, request, sublogger)
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -188,7 +188,7 @@ func NewCreateEntityHandlerWithCallback(
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		logger = decorateLogger(r, logger)
+		sublogger := decorateLogger(r, logger)
 
 		request := newRequestWrapper(r)
 
@@ -219,7 +219,7 @@ func NewCreateEntityHandlerWithCallback(
 			}
 		}
 
-		onsuccess(entity.Type, entity.ID, request, logger)
+		onsuccess(entity.Type, entity.ID, request, sublogger)
 
 		w.WriteHeader(http.StatusCreated)
 	})
