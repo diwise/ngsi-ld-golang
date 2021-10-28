@@ -27,7 +27,7 @@ type waterQualityDTO struct {
 	DateObserved       ngsi.DateTimeProperty          `json:"dateObserved"`
 	Location           json.RawMessage                `json:"location"`
 	RefDevice          *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
-	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterested,omitempty"`
+	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterest,omitempty"`
 	Temperature        *ngsi.NumberProperty           `json:"temperature,omitempty"`
 }
 

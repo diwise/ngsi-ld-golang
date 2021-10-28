@@ -1,6 +1,9 @@
 package fiware
 
 import (
+	"bytes"
+	"encoding/json"
+
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
@@ -12,6 +15,17 @@ type WeatherObserved struct {
 	DateModified *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObserved ngsi.DateTimeProperty          `json:"dateObserved"`
 	Location     geojson.GeoJSONProperty        `json:"location"`
+	RefDevice    *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
+	SnowHeight   *ngsi.NumberProperty           `json:"snowHeight,omitempty"`
+	Temperature  *ngsi.NumberProperty           `json:"temperature,omitempty"`
+}
+
+type weatherObservedDTO struct {
+	ngsi.BaseEntity
+	DateCreated  *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
+	DateModified *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
+	DateObserved ngsi.DateTimeProperty          `json:"dateObserved"`
+	Location     json.RawMessage                `json:"location"`
 	RefDevice    *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
 	SnowHeight   *ngsi.NumberProperty           `json:"snowHeight,omitempty"`
 	Temperature  *ngsi.NumberProperty           `json:"temperature,omitempty"`
@@ -71,4 +85,27 @@ func (wo WeatherObserved) ToGeoJSONFeature(propertyName string, simplified bool)
 	}
 
 	return g, nil
+}
+
+func (wo *WeatherObserved) UnmarshalJSON(data []byte) error {
+	dto := &weatherObservedDTO{}
+	err := json.NewDecoder(bytes.NewReader(data)).Decode(dto)
+
+	if err == nil {
+		wo.ID = dto.ID
+		wo.Type = dto.Type
+
+		wo.DateCreated = dto.DateCreated
+		wo.DateModified = dto.DateModified
+		wo.DateObserved = dto.DateObserved
+		wo.RefDevice = dto.RefDevice
+		wo.SnowHeight = dto.SnowHeight
+		wo.Temperature = dto.Temperature
+
+		wo.Context = dto.Context
+
+		wo.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+	}
+
+	return err
 }
