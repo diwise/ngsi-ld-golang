@@ -48,7 +48,7 @@ func NewWaterQualityObserved(device string, latitude float64, longitude float64,
 		RefDevice:    refDevice,
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "WaterQualityObserved",
+			Type: WaterQualityObservedTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

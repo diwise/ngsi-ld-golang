@@ -21,7 +21,7 @@ func NewOpen311ServiceType(label string, reportType string) *Open311ServiceType 
 		ServiceCode: *ngsi.NewNumberPropertyFromString(reportType),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "Open311ServiceType",
+			Type: Open311ServiceTypeTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

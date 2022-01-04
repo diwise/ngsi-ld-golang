@@ -54,7 +54,7 @@ func NewTrafficFlowObserved(id string, observedAt string, laneID int, intensity 
 		Intensity:    intense,
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "TrafficFlowObserved",
+			Type: TrafficFlowObservedTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

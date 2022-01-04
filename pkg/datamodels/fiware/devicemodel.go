@@ -29,7 +29,7 @@ func NewDeviceModel(id string, categories []string) *DeviceModel {
 		Category: ngsi.NewTextListProperty(categories),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "DeviceModel",
+			Type: DeviceModelTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

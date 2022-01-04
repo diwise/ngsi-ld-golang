@@ -25,7 +25,7 @@ func NewOpen311ServiceRequest(latitude float64, longitude float64, reportedType 
 		ServiceCode:       *ngsi.NewNumberPropertyFromInt(reportedType),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "Open311ServiceRequest",
+			Type: Open311ServiceRequestTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

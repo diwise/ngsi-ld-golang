@@ -40,7 +40,7 @@ func NewDevice(id string, value string) *Device {
 		Value: ngsi.NewTextProperty(value),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "Device",
+			Type: DeviceTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

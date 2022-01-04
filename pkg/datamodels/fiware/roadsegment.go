@@ -52,7 +52,7 @@ func NewRoadSegment(id, roadSegmentName, roadID string, coords [][2]float64, mod
 		TotalLaneNumber: ngsi.NewNumberPropertyFromInt(1),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "RoadSegment",
+			Type: RoadSegmentTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

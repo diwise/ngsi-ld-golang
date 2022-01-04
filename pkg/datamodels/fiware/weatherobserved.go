@@ -48,7 +48,7 @@ func NewWeatherObserved(device string, latitude float64, longitude float64, obse
 		RefDevice:    refDevice,
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "WeatherObserved",
+			Type: WeatherObservedTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",
