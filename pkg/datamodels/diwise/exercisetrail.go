@@ -23,6 +23,7 @@ type ExerciseTrail struct {
 	DateModified        *ngsi.DateTimeProperty        `json:"dateModified,omitempty"`
 	DateLastPreparation *ngsi.DateTimeProperty        `json:"dateLastPreparation,omitempty"`
 	Responsible         *ngsi.TextProperty            `json:"responsible,omitempty"`
+	Source              *ngsi.TextProperty            `json:"source,omitempty"`
 	Status              *ngsi.TextProperty            `json:"status,omitempty"`
 }
 
@@ -39,6 +40,7 @@ type exerciseTrailDTO struct {
 	DateModified        *ngsi.DateTimeProperty        `json:"dateModified,omitempty"`
 	DateLastPreparation *ngsi.DateTimeProperty        `json:"dateLastPreparation,omitempty"`
 	Responsible         *ngsi.TextProperty            `json:"responsible,omitempty"`
+	Source              *ngsi.TextProperty            `json:"source,omitempty"`
 	Status              *ngsi.TextProperty            `json:"status,omitempty"`
 }
 
@@ -48,10 +50,9 @@ func NewExerciseTrail(id string, trailName string, length float64, description s
 		id = ExerciseTrailIDPrefix + id
 	}
 
-	return &ExerciseTrail{
+	trail := &ExerciseTrail{
 		Name:        ngsi.NewTextProperty(trailName),
 		Description: ngsi.NewTextProperty(description),
-		Length:      ngsi.NewNumberProperty(length),
 		Location:    location,
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
@@ -62,6 +63,12 @@ func NewExerciseTrail(id string, trailName string, length float64, description s
 			},
 		},
 	}
+
+	if length > 0.1 {
+		trail.Length = ngsi.NewNumberProperty(length)
+	}
+
+	return trail
 }
 
 func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (geojson.GeoJSONFeature, error) {
@@ -107,6 +114,10 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 			g.SetProperty("responsible", t.Responsible.Value)
 		}
 
+		if t.Source != nil {
+			g.SetProperty("source", t.Source.Value)
+		}
+
 		if t.Status != nil {
 			g.SetProperty("status", t.Status.Value)
 		}
@@ -124,6 +135,7 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 		g.SetProperty("dateModified", t.DateModified)
 		g.SetProperty("dateLastPreparation", t.DateLastPreparation)
 		g.SetProperty("responsible", t.Responsible)
+		g.SetProperty("source", t.Source)
 		g.SetProperty("status", t.Status)
 	}
 
@@ -148,6 +160,7 @@ func (t *ExerciseTrail) UnmarshalJSON(data []byte) error {
 		t.Difficulty = dto.Difficulty
 		t.DateLastPreparation = dto.DateLastPreparation
 		t.Responsible = dto.Responsible
+		t.Source = dto.Source
 		t.Status = dto.Status
 
 		t.Context = dto.Context
