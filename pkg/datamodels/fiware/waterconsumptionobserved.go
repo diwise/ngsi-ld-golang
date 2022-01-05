@@ -68,7 +68,7 @@ func NewWaterConsumptionObserved(id string) *WaterConsumptionObserved {
 	wco := &WaterConsumptionObserved{
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "WaterConsumptionObserved",
+			Type: WaterConsumptionObservedTypeName,
 			Context: []string{
 				"https://raw.githubusercontent.com/easy-global-market/ngsild-api-data-models/master/WaterSmartMeter/jsonld-contexts/waterSmartMeter-compound.jsonld",
 			},

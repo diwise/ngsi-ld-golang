@@ -39,6 +39,10 @@ const (
 	TrafficFlowObservedTypeName string = "TrafficFlowObserved"
 	//TrafficFlowObserved ...
 	TrafficFlowObservedIDPrefix string = urnPrefix + TrafficFlowObservedTypeName + ":"
+	//WaterConsumptionObservedTypeName is a type name constant for WaterConsumptionObserved
+	WaterConsumptionObservedTypeName string = "WaterConsumptionObserved"
+	//WaterConsumptionObservedIDPrefix ...
+	WaterConsumptionObservedIDPrefix string = urnPrefix + WaterConsumptionObservedTypeName + ":"
 	//WaterQualityObservedTypeName is a type name constant for WaterQualityObserved
 	WaterQualityObservedTypeName string = "WaterQualityObserved"
 	//WaterQualityObservedIDPrefix ...
