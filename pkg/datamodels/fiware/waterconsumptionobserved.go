@@ -13,14 +13,14 @@ import (
 type WCOTextProperty struct {
 	ngsi.TextProperty
 	ObservedBy ngsi.SingleObjectRelationship `json:"observedBy,omitempty"`
-	ObservedAt time.Time                     `json:"observedAt,omitempty"`
+	ObservedAt string                        `json:"observedAt,omitempty"`
 	UnitCode   string                        `json:"unitCode,omitempty"`
 }
 
 type WCONumberProperty struct {
 	ngsi.NumberProperty
 	ObservedBy ngsi.SingleObjectRelationship `json:"observedBy,omitempty"`
-	ObservedAt time.Time                     `json:"observedAt,omitempty"`
+	ObservedAt string                        `json:"observedAt,omitempty"`
 	UnitCode   string                        `json:"unitCode,omitempty"`
 }
 
@@ -141,4 +141,15 @@ func (wco *WaterConsumptionObserved) UnmarshalJSON(data []byte) error {
 	}
 
 	return err
+}
+
+func (wco *WaterConsumptionObserved) WithConsumption(device string, consumption float64, observedAt time.Time) *WaterConsumptionObserved {
+	wco.WaterConsumption = &WCONumberProperty{
+		ObservedAt:     observedAt.Format(time.RFC3339),
+		ObservedBy:     *ngsi.NewSingleObjectRelationship(device),
+		NumberProperty: *ngsi.NewNumberProperty(consumption),
+		UnitCode:       "LTR",
+	}
+
+	return wco
 }

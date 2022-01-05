@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/matryer/is"
 )
 
 func TestMain(m *testing.M) {
@@ -15,31 +15,27 @@ func TestMain(m *testing.M) {
 }
 
 func TestUnmarshalJSONToWaterConsumptionObserved(t *testing.T) {
+	is := is.New(t)
 	wco := WaterConsumptionObserved{}
 
 	err := json.Unmarshal([]byte(wcoJson), &wco)
-	if err != nil {
-		t.Errorf("Expectation failed. Could not unmarshal json string into WaterConsumptionObserved because: %s", err.Error())
-	}
+
+	is.NoErr(err) // Could not unmarshal json string into WaterConsumptionObserved
 
 }
 
 func TestNewWaterConsumptionObserved(t *testing.T) {
+	is := is.New(t)
 	id := "waterConsumption01"
+	observedAt := time.Now().UTC()
 
 	wco := NewWaterConsumptionObserved(id)
 
-	wco.WaterConsumption = &WCONumberProperty{
-		NumberProperty: *types.NewNumberPropertyFromInt(806040),
-	}
+	wco.WithConsumption(id, 806040.0, observedAt)
 
-	if wco.ID != WaterConsumptionObservedIDPrefix+id {
-		t.Error("Expectation failed. Wrong ID.")
-	}
+	is.Equal(wco.ID, WaterConsumptionObservedIDPrefix+id)         // Expected wco.ID to match
+	is.Equal(wco.WaterConsumption.NumberProperty.Value, 806040.0) // Value of water consumption does not match
 
-	if wco.WaterConsumption.Value != 806040 {
-		t.Error("Expectation failed. Value of water consumption does not match")
-	}
 }
 
 func TestRoadSegment(t *testing.T) {
