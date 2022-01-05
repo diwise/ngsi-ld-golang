@@ -241,9 +241,9 @@ func TestGetEntitiesWithGeoQueryNearPoint(t *testing.T) {
 	is := is.New(t)
 
 	req, _ := http.NewRequest("GET", createURL(
-		"/entitites",
+		"/entities",
 		"type=RoadSegment",
-		"georel=near;maxDistance==2000",
+		"georel=near%3BmaxDistance==2000",
 		"geometry=Point",
 		"coordinates=[8,40]"),
 		nil)
