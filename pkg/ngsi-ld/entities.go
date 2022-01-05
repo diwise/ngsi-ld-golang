@@ -21,24 +21,31 @@ type Entity interface {
 //entities matching the query that has been passed in
 type QueryEntitiesCallback func(entity Entity) error
 
+func getEntityConverterFromRequest(r *http.Request) (string, func(interface{}) interface{}, *geojson.GeoJSONFeatureCollection) {
+	// Default entity converter doesn't actually convert anything
+	entityConverter := func(e interface{}) interface{} { return e }
+
+	responseContentType := "application/ld+json;charset=utf-8"
+	var geoJSONFeatureCollection *geojson.GeoJSONFeatureCollection
+
+	// Check Accept to find out what kind of data the client wants
+	for _, acceptableType := range r.Header["Accept"] {
+		if strings.HasPrefix(acceptableType, geojson.ContentType) {
+			options := r.URL.Query().Get("options")
+			geoJSONFeatureCollection = geojson.NewGeoJSONFeatureCollection([]geojson.GeoJSONFeature{}, true)
+			entityConverter = geojson.NewEntityConverter("location", options == "keyValues", geoJSONFeatureCollection)
+			responseContentType = geojson.ContentTypeWithCharset
+		}
+	}
+
+	return responseContentType, entityConverter, geoJSONFeatureCollection
+}
+
 //NewQueryEntitiesHandler handles GET requests for NGSI entitites
 func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Default entity converter doesn't actually convert anything
-		entityConverter := func(e interface{}) interface{} { return e }
 
-		responseContentType := "application/ld+json;charset=utf-8"
-		var geoJSONFeatureCollection *geojson.GeoJSONFeatureCollection
-
-		// Check Accept to find out what kind of data the client wants
-		for _, acceptableType := range r.Header["Accept"] {
-			if strings.HasPrefix(acceptableType, geojson.ContentType) {
-				options := r.URL.Query().Get("options")
-				geoJSONFeatureCollection = geojson.NewGeoJSONFeatureCollection([]geojson.GeoJSONFeature{}, true)
-				entityConverter = geojson.NewEntityConverter("location", options == "keyValues", geoJSONFeatureCollection)
-				responseContentType = geojson.ContentTypeWithCharset
-			}
-		}
+		responseContentType, entityConverter, geoJSONFeatureCollection := getEntityConverterFromRequest(r)
 
 		entityTypeNames := r.URL.Query().Get("type")
 		attributeNames := r.URL.Query().Get("attrs")
@@ -228,6 +235,8 @@ func NewCreateEntityHandlerWithCallback(
 //NewRetrieveEntityHandler retrieves entity by ID.
 func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		responseContentType, entityConverter, _ := getEntityConverterFromRequest(r)
+
 		entitiesIdx := strings.Index(r.URL.Path, "/entities/")
 
 		if entitiesIdx == -1 {
@@ -266,9 +275,9 @@ func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 			return
 		}
 
-		bytes, _ := json.Marshal(entity)
+		bytes, _ := json.Marshal(entityConverter(entity))
 
-		w.Header().Add("Content-Type", "application/ld+json;charset=utf-8")
+		w.Header().Add("Content-Type", responseContentType)
 		w.Write(bytes)
 	})
 }
