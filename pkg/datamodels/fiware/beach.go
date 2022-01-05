@@ -80,7 +80,7 @@ func NewBeach(id, name string, location geojson.GeoJSONGeometry) *Beach {
 		Location: location,
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "Beach",
+			Type: BeachTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

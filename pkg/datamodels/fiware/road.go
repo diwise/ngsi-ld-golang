@@ -26,7 +26,7 @@ func NewRoad(id string, roadName string, roadClass string, roadSegmentIdentities
 		RefRoadSegment: ngsi.NewMultiObjectRelationship(roadSegmentIdentities),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "RoadSegment",
+			Type: RoadTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

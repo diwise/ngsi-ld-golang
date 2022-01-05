@@ -12,7 +12,7 @@ import (
 //Device is a Fiware entity
 type Device struct {
 	ngsi.BaseEntity
-	Value                 *ngsi.TextProperty             `json:"value"`
+	Value                 *ngsi.TextProperty             `json:"value,omitempty"`
 	DateLastValueReported *ngsi.DateTimeProperty         `json:"dateLastValueReported,omitempty"`
 	DateCreated           *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
@@ -22,7 +22,7 @@ type Device struct {
 
 type deviceDTO struct {
 	ngsi.BaseEntity
-	Value                 *ngsi.TextProperty             `json:"value"`
+	Value                 *ngsi.TextProperty             `json:"value,omitempty"`
 	DateLastValueReported *ngsi.DateTimeProperty         `json:"dateLastValueReported,omitempty"`
 	DateCreated           *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
@@ -40,7 +40,7 @@ func NewDevice(id string, value string) *Device {
 		Value: ngsi.NewTextProperty(value),
 		BaseEntity: ngsi.BaseEntity{
 			ID:   id,
-			Type: "Device",
+			Type: DeviceTypeName,
 			Context: []string{
 				"https://schema.lab.fiware.org/ld/context",
 				"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld",

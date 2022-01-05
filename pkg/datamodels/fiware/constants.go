@@ -1,26 +1,50 @@
 package fiware
 
+const urnPrefix string = "urn:ngsi-ld:"
+
 const (
+	//BeachTypeName is a type name constant for Beach
+	BeachTypeName string = "Beach"
 	//BeachIDPrefix contains the mandatory prefix for Beach ID:s
-	BeachIDPrefix string = "urn:ngsi-ld:Beach:"
+	BeachIDPrefix string = urnPrefix + BeachTypeName + ":"
+	//DeviceTypeName is a type name constant for Device
+	DeviceTypeName string = "Device"
 	//DeviceIDPrefix contains the mandatory prefix for Device ID:s
-	DeviceIDPrefix string = "urn:ngsi-ld:Device:"
+	DeviceIDPrefix string = urnPrefix + DeviceTypeName + ":"
+	//DeviceModelTypeName is a type name constant for DeviceModel
+	DeviceModelTypeName string = "DeviceModel"
 	//DeviceModelIDPrefix contains the mandatory prefix for DeviceModel ID:s
-	DeviceModelIDPrefix string = "urn:ngsi-ld:DeviceModel:"
+	DeviceModelIDPrefix string = urnPrefix + DeviceModelTypeName + ":"
+	//Open311ServiceRequestTypeName is a type name constant for Open311ServiceRequest
+	Open311ServiceRequestTypeName string = "Open311ServiceRequest"
 	//Open311ServiceRequestIDPrefix ...
-	Open311ServiceRequestIDPrefix string = "urn:ngsi-ld:Open311ServiceRequest:"
+	Open311ServiceRequestIDPrefix string = urnPrefix + Open311ServiceRequestTypeName + ":"
+	//Open311ServiceTypeTypeName is a type name constant for Open311ServiceType
+	Open311ServiceTypeTypeName string = "Open311ServiceType"
 	//Open311ServiceTypeIDPrefix ...
-	Open311ServiceTypeIDPrefix string = "urn:ngsi-ld:Open311ServiceType:"
+	Open311ServiceTypeIDPrefix string = urnPrefix + Open311ServiceTypeTypeName + ":"
+	//PointOfInterestTypeName is a type name constant for PointOfInterest
+	PointOfInterestTypeName string = "PointOfInterest"
 	//PointOfInterestIDPrefix contains the mandatory prefix for PointOfInterest ID:s
-	PointOfInterestIDPrefix string = "urn:ngsi-ld:PointOfInterest:"
+	PointOfInterestIDPrefix string = urnPrefix + PointOfInterestTypeName + ":"
+	//RoadTypeName is a type name constant for Road
+	RoadTypeName string = "Road"
 	//RoadIDPrefix ...
-	RoadIDPrefix string = "urn:ngsi-ld:Road:"
+	RoadIDPrefix string = urnPrefix + RoadTypeName + ":"
+	//RoadSegmentTypeName is a type name constant for RoadSegment
+	RoadSegmentTypeName string = "RoadSegment"
 	//RoadSegmentIDPrefix ...
-	RoadSegmentIDPrefix string = "urn:ngsi-ld:RoadSegment:"
+	RoadSegmentIDPrefix string = urnPrefix + RoadSegmentTypeName + ":"
+	//TrafficFlowObservedTypeName is a type name constant for TrafficFlowObserved
+	TrafficFlowObservedTypeName string = "TrafficFlowObserved"
 	//TrafficFlowObserved ...
-	TrafficFlowObservedIDPrefix string = "urn:ngsi-ld:TrafficFlowObserved:"
+	TrafficFlowObservedIDPrefix string = urnPrefix + TrafficFlowObservedTypeName + ":"
+	//WaterQualityObservedTypeName is a type name constant for WaterQualityObserved
+	WaterQualityObservedTypeName string = "WaterQualityObserved"
 	//WaterQualityObservedIDPrefix ...
-	WaterQualityObservedIDPrefix string = "urn:ngsi-ld:WaterQualityObserved:"
+	WaterQualityObservedIDPrefix string = urnPrefix + WaterQualityObservedTypeName + ":"
+	//WeatherObservedTypeName is a type name constant for WeatherObserved
+	WeatherObservedTypeName string = "WeatherObserved"
 	//WeatherObservedIDPrefix ...
-	WeatherObservedIDPrefix string = "urn:ngsi-ld:WeatherObserved:"
+	WeatherObservedIDPrefix string = urnPrefix + WeatherObservedTypeName + ":"
 )

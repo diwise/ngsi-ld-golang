@@ -43,7 +43,16 @@ func (gjgi *geoJSONGeometryImpl) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if temp.Type == "MultiPolygon" {
+	if temp.Type == "LineString" {
+		coords := [][]float64{}
+		err = json.Unmarshal(temp.Coordinates, &coords)
+		if err != nil {
+			return err
+		}
+
+		gjp := CreateGeoJSONPropertyFromLineString(coords)
+		gjgi.Geometry = gjp.Value
+	} else if temp.Type == "MultiPolygon" {
 		coords := [][][][]float64{}
 		err = json.Unmarshal(temp.Coordinates, &coords)
 		if err != nil {
@@ -221,7 +230,28 @@ func (gjpp GeoJSONPropertyPoint) Longitude() float64 {
 	return gjpp.Coordinates[0]
 }
 
-//GeoJSONPropertyMultiPolygon is used as the value object for a GeoJSONPropertyPoint
+//GeoJSONPropertyLineString is used as the value object for a GeoJSONPropertyLineString
+type GeoJSONPropertyLineString struct {
+	Type        string      `json:"type"`
+	Coordinates [][]float64 `json:"coordinates"`
+}
+
+func (gjpls *GeoJSONPropertyLineString) GeoPropertyType() string {
+	return gjpls.Type
+}
+
+func (gjpls *GeoJSONPropertyLineString) GeoPropertyValue() GeoJSONGeometry {
+	return gjpls
+}
+
+func (gjpls *GeoJSONPropertyLineString) GetAsPoint() GeoJSONPropertyPoint {
+	return GeoJSONPropertyPoint{
+		Type:        "Point",
+		Coordinates: [2]float64{gjpls.Coordinates[0][0], gjpls.Coordinates[0][1]},
+	}
+}
+
+//GeoJSONPropertyMultiPolygon is used as the value object for a GeoJSONPropertyMultiPolygon
 type GeoJSONPropertyMultiPolygon struct {
 	Type        string          `json:"type"`
 	Coordinates [][][][]float64 `json:"coordinates"`
@@ -286,6 +316,19 @@ func CreateGeoJSONPropertyFromWGS84(longitude, latitude float64) *GeoJSONPropert
 		Value: &GeoJSONPropertyPoint{
 			Type:        "Point",
 			Coordinates: [2]float64{longitude, latitude},
+		},
+	}
+
+	return p
+}
+
+//CreateGeoJSONPropertyFromLineString creates a GeoJSONProperty from an array of line coordinate arrays
+func CreateGeoJSONPropertyFromLineString(coordinates [][]float64) *GeoJSONProperty {
+	p := &GeoJSONProperty{
+		Property: Property{Type: "GeoProperty"},
+		Value: &GeoJSONPropertyLineString{
+			Type:        "LineString",
+			Coordinates: coordinates,
 		},
 	}
 
