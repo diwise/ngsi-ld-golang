@@ -180,17 +180,38 @@ func NewEntityConverter(property string, simplified bool, collection *GeoJSONFea
 }
 
 func UnpackGeoJSONToCallback(bytes []byte, callback func(GeoJSONFeature) error) error {
-	collection := GeoJSONFeatureCollection{}
-	err := json.Unmarshal(bytes, &collection)
+
+	typeCheck := struct {
+		Type string `json:"type"`
+	}{}
+	err := json.Unmarshal(bytes, &typeCheck)
 	if err != nil {
 		return err
 	}
 
-	for _, f := range collection.Features {
-		err = callback(f)
+	if typeCheck.Type == "FeatureCollection" {
+		collection := GeoJSONFeatureCollection{}
+		err = json.Unmarshal(bytes, &collection)
 		if err != nil {
 			return err
 		}
+
+		for _, f := range collection.Features {
+			err = callback(f)
+			if err != nil {
+				return err
+			}
+		}
+	} else if typeCheck.Type == "Feature" {
+		feature := &geoJSONFeatureImpl{}
+		err = json.Unmarshal(bytes, feature)
+		if err != nil {
+			return err
+		}
+
+		callback(feature)
+	} else {
+		return fmt.Errorf("unable to unpack unknown geo json type \"%s\"", typeCheck.Type)
 	}
 
 	return nil
