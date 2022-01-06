@@ -235,7 +235,7 @@ func NewCreateEntityHandlerWithCallback(
 //NewRetrieveEntityHandler retrieves entity by ID.
 func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		responseContentType, entityConverter, _ := getEntityConverterFromRequest(r)
+		responseContentType, entityConverter, geoJSONFeatureCollection := getEntityConverterFromRequest(r)
 
 		entitiesIdx := strings.Index(r.URL.Path, "/entities/")
 
@@ -275,7 +275,15 @@ func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 			return
 		}
 
-		bytes, _ := json.Marshal(entityConverter(entity))
+		entity = entityConverter(entity)
+
+		var bytes []byte
+
+		if geoJSONFeatureCollection != nil {
+			bytes, _ = json.Marshal(geoJSONFeatureCollection)
+		} else {
+			bytes, _ = json.Marshal(entity)
+		}
 
 		w.Header().Add("Content-Type", responseContentType)
 		w.Write(bytes)

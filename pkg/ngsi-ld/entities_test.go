@@ -14,6 +14,7 @@ import (
 
 	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
 	ngsierrors "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 	"github.com/matryer/is"
 )
@@ -310,6 +311,29 @@ func TestRetrieveEntity(t *testing.T) {
 
 	is.Equal(contextSource.retrievedEntity, deviceID) // DeviceID does not match retrievedEntity
 	is.Equal(w.Code, http.StatusOK)                   // unexpected response code
+}
+
+func TestRetrieveEntityAsGeoJSON(t *testing.T) {
+	is := is.New(t)
+	beachID := fiware.BeachIDPrefix + "mybeach"
+	req, _ := http.NewRequest("GET", createURL("/entities/"+beachID), nil)
+	req.Header.Set("Accept", "application/geo+json")
+
+	w := httptest.NewRecorder()
+	contextRegistry := NewContextRegistry()
+	contextSource := &ContextSourceMock{
+		ProvidesEntitiesWithMatchingIDFunc: func(string) bool { return true }, // accept anything
+		RetrieveEntityFunc: func(entityID string, request Request) (Entity, error) {
+			return fiware.NewBeach(beachID, "Omaha", geojson.CreateGeoJSONPropertyFromMultiPolygon([][][][]float64{{{{1.0, 2.0}, {3.0, 4.0}}}})), nil
+		},
+	}
+	contextRegistry.Register(contextSource)
+
+	NewRetrieveEntityHandler(contextRegistry).ServeHTTP(w, req)
+
+	is.Equal(contextSource.RetrieveEntityCalls()[0].EntityID, beachID) // beach id does not match retrievedEntity
+	is.Equal(w.Code, http.StatusOK)                                    // unexpected response code
+	is.Equal(w.Result().Header.Get("Content-Type"), "application/geo+json;charset=utf-8")
 }
 
 func TestUpdateEntitityAttributes(t *testing.T) {
