@@ -134,7 +134,7 @@ func (rcs *remoteContextSource) GetEntities(query Query, callback QueryEntitiesC
 	response, err := proxyToRemote(u, req)
 
 	// If the response code is 200 we can just unmarshal the payload
-	// and pass the individual entitites to the supplied callback.
+	// and pass the individual entities to the supplied callback.
 	// We need to check of the payload is GeoJSON or not though.
 	if response.responseCode == http.StatusOK {
 

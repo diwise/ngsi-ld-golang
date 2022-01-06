@@ -50,7 +50,7 @@ const (
 )
 
 //GeoQuery contains information about a geo-query that may be used for subscriptions
-//or when querying entitites
+//or when querying entities
 type GeoQuery struct {
 	Geometry    string    `json:"geometry"`
 	Coordinates []float64 `json:"coordinates"`

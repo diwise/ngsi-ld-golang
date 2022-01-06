@@ -15,7 +15,6 @@ import (
 	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
 	ngsierrors "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/errors"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
-	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 	"github.com/matryer/is"
 )
 
@@ -127,12 +126,15 @@ func TestCreateEntityWorksForTrafficFlowObserved(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	ctxReg, ctxSrc := newContextRegistryWithSourceForType(typeName)
+	ctxSrc.CreateEntityFunc = func(tn string, eid string, request Request) error {
+		is.Equal(tn, typeName)  // create entity called with wrong type name
+		is.Equal(eid, entityID) // create entity called with wrong entity id
+		return nil
+	}
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
-	is.Equal(w.Code, http.StatusCreated)         // failed to create entity
-	is.Equal(ctxSrc.createdEntityType, typeName) // create entity called with wrong type name
-	is.Equal(ctxSrc.createdEntity, entityID)     // create entity called with wrong entity id
+	is.Equal(w.Code, http.StatusCreated) // failed to create entity
 }
 
 func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
@@ -143,13 +145,15 @@ func TestCreateEntityUsesCorrectTypeAndID(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	ctxReg, ctxSrc := newContextRegistryWithSourceForType(typeName)
+	ctxSrc.CreateEntityFunc = func(tn string, eid string, request Request) error {
+		is.Equal(tn, typeName)  // create entity called with wrong type name
+		is.Equal(eid, entityID) // create entity called with wrong entity id
+		return nil
+	}
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
-	is.Equal(w.Code, http.StatusCreated)         // failed to create entity
-	is.Equal(ctxSrc.createdEntityType, typeName) // create entity called with wrong type name
-	is.Equal(ctxSrc.createdEntity, entityID)     // create entity called with wrong entity id
-
+	is.Equal(w.Code, http.StatusCreated) // failed to create entity
 }
 
 func TestThatProblemsAreReportedWithCorrectContentType(t *testing.T) {
@@ -189,7 +193,7 @@ func TestCreateEntityHandlesFailureFromContextSource(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	ctxReg, ctxSrc := newContextRegistryWithSourceForType(typeName)
-	ctxSrc.createEntityShouldFailWithError = errors.New("failure")
+	ctxSrc.CreateEntityFunc = func(string, string, Request) error { return errors.New("failure") }
 
 	NewCreateEntityHandler(ctxReg).ServeHTTP(w, req)
 
@@ -198,7 +202,7 @@ func TestCreateEntityHandlesFailureFromContextSource(t *testing.T) {
 
 func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
 	is := is.New(t)
-	req, _ := http.NewRequest("GET", createURL("/entitites"), nil)
+	req, _ := http.NewRequest("GET", createURL("/entities"), nil)
 	w := httptest.NewRecorder()
 
 	NewQueryEntitiesHandler(NewContextRegistry()).ServeHTTP(w, req)
@@ -209,7 +213,7 @@ func TestGetEntitiesWithoutAttributesOrTypesFails(t *testing.T) {
 func TestGetEntitiesWithAttribute(t *testing.T) {
 	is := is.New(t)
 
-	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight"), nil)
+	req, _ := http.NewRequest("GET", createURL("/entities", "attrs=snowHeight"), nil)
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextRegistry.Register(newMockedContextSource(
@@ -226,16 +230,20 @@ func TestGetEntitiesForDevice(t *testing.T) {
 	is := is.New(t)
 
 	deviceID := fiware.DeviceIDPrefix + "mydevice"
-	req, _ := http.NewRequest("GET", createURL("/entitites", "attrs=snowHeight", "q=refDevice==\""+deviceID+"\""), nil)
+	req, _ := http.NewRequest("GET", createURL("/entities", "attrs=snowHeight", "q=refDevice==\""+deviceID+"\""), nil)
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextSource := newMockedContextSource("", "snowHeight")
+	contextSource.GetEntitiesFunc = func(q Query, cb QueryEntitiesCallback) error {
+		is.True(q.HasDeviceReference())
+		is.Equal(q.Device(), deviceID)
+		return nil
+	}
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	is.Equal(contextSource.queriedDevice, deviceID) // queried device did not match expectations
-	is.Equal(w.Code, http.StatusOK)                 // unexpected response code
+	is.Equal(w.Code, http.StatusOK) // unexpected response code
 }
 
 func TestGetEntitiesWithGeoQueryNearPoint(t *testing.T) {
@@ -251,29 +259,28 @@ func TestGetEntitiesWithGeoQueryNearPoint(t *testing.T) {
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextSource := newMockedContextSource("RoadSegment", "")
+	contextSource.GetEntitiesFunc = func(q Query, cb QueryEntitiesCallback) error {
+		is.True(q.IsGeoQuery()) // expected a geo query from QueryEntitiesHandler
+		geo := q.Geo()
+		is.Equal(geo.GeoRel, "near") // geospatial relation not correctly saved in geo query
+		distance, _ := geo.Distance()
+		is.Equal(distance, uint32(2000)) // unexpected near distance parsed from geo query
+		x, y, _ := geo.Point()
+		is.Equal(fmt.Sprintf("(%.1f,%.1f)", x, y), "(8.0,40.0)") // mismatching point
+		return nil
+	}
+
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
 	is.Equal(w.Code, http.StatusOK) // unexpected response code
-
-	query := contextSource.generatedQuery
-	is.True(query.IsGeoQuery()) // expected a geo query from QueryEntitiesHandler
-
-	geo := query.Geo()
-	is.Equal(geo.GeoRel, "near") // geospatial relation not correctly saved in geo query
-
-	distance, _ := geo.Distance()
-	is.Equal(distance, uint32(2000)) // unexpected near distance parsed from geo query
-
-	x, y, _ := geo.Point()
-	is.Equal(fmt.Sprintf("(%.1f,%.1f)", x, y), "(8.0,40.0)") // mismatching point
 }
 
 func TestGetEntitiesWithGeoQueryWithinRect(t *testing.T) {
 	is := is.New(t)
 	req, _ := http.NewRequest("GET", createURL(
-		"/entitites",
+		"/entities",
 		"type=RoadSegment",
 		"georel=within",
 		"geometry=Polygon",
@@ -282,20 +289,20 @@ func TestGetEntitiesWithGeoQueryWithinRect(t *testing.T) {
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextSource := newMockedContextSource("RoadSegment", "")
+	contextSource.GetEntitiesFunc = func(q Query, cb QueryEntitiesCallback) error {
+		is.True(q.IsGeoQuery()) // expected a geo query from QueryEntitiesHandler
+		geo := q.Geo()
+		is.Equal(geo.GeoRel, "within") // geospatial relation not correctly saved in geo query
+
+		lon0, lat0, lon1, lat1, _ := geo.Rectangle()
+		is.Equal(fmt.Sprintf("[(%.1f,%.1f),(%.1f,%.1f)]", lat0, lon0, lat1, lon1), "[(40.0,8.0),(42.0,10.0)]") // bad coordinates in geo query rect
+		return nil
+	}
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
 	is.Equal(w.Code, http.StatusOK) // unexpected response code
-
-	query := contextSource.generatedQuery
-	is.True(query.IsGeoQuery()) // expected a GeoQuery from the QueryEntititesHandler
-
-	geo := query.Geo()
-	is.Equal(geo.GeoRel, "within") // geospatial relation not correctly saved in geo query
-
-	lon0, lat0, lon1, lat1, _ := geo.Rectangle()
-	is.Equal(fmt.Sprintf("[(%.1f,%.1f),(%.1f,%.1f)]", lat0, lon0, lat1, lon1), "[(40.0,8.0),(42.0,10.0)]") // bad coordinates in GeoQuery rect
 }
 
 func TestRetrieveEntity(t *testing.T) {
@@ -305,12 +312,13 @@ func TestRetrieveEntity(t *testing.T) {
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextSource := newMockedContextSource("Device", "")
+	contextSource.ProvidesEntitiesWithMatchingIDFunc = func(string) bool { return true }
 	contextRegistry.Register(contextSource)
 
 	NewRetrieveEntityHandler(contextRegistry).ServeHTTP(w, req)
 
-	is.Equal(contextSource.retrievedEntity, deviceID) // DeviceID does not match retrievedEntity
-	is.Equal(w.Code, http.StatusOK)                   // unexpected response code
+	is.Equal(contextSource.RetrieveEntityCalls()[0].EntityID, deviceID) // DeviceID does not match retrievedEntity
+	is.Equal(w.Code, http.StatusOK)                                     // unexpected response code
 }
 
 func TestRetrieveEntityAsGeoJSON(t *testing.T) {
@@ -346,11 +354,14 @@ func TestUpdateEntitityAttributes(t *testing.T) {
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
 	contextSource := newMockedContextSource("", "value")
+	contextSource.ProvidesEntitiesWithMatchingIDFunc = func(string) bool { return true }
+	contextSource.UpdateEntityAttributesFunc = func(entityID string, req Request) error {
+		is.Equal(entityID, deviceID) // patched entity did not match expectations.
+		return nil
+	}
 	contextRegistry.Register(contextSource)
 
 	NewUpdateEntityAttributesHandler(contextRegistry).ServeHTTP(w, req)
-
-	is.Equal(contextSource.patchedEntity, deviceID) // patched entity did not match expectations.
 }
 
 type mockEntity struct {
@@ -361,94 +372,43 @@ func e(val string) mockEntity {
 	return mockEntity{Value: val}
 }
 
-func newContextRegistryWithSourceForType(typeName string) (ContextRegistry, *mockCtxSource) {
+func newContextRegistryWithSourceForType(typeName string) (ContextRegistry, *ContextSourceMock) {
 	contextRegistry := NewContextRegistry()
-	contextSource := newMockedContextSource(typeName, "")
+	contextSource := &ContextSourceMock{
+		GetProvidedTypeFromIDFunc: func(string) (string, error) { return typeName, nil },
+		ProvidesTypeFunc:          func(name string) bool { return name == typeName },
+		RetrieveEntityFunc: func(string, Request) (Entity, error) {
+			e := &mockEntity{}
+			return e, nil
+		},
+	}
 	contextRegistry.Register(contextSource)
 	return contextRegistry, contextSource
 }
 
 func newEntityAsByteBuffer(entityID string) (io.Reader, string) {
-
 	device := fiware.NewDevice(entityID, "")
 	jsonBytes, _ := json.Marshal(device)
 	return bytes.NewBuffer(jsonBytes), device.Type
 }
 
-func newMockedContextSource(typeName string, attributeName string, e ...mockEntity) *mockCtxSource {
-	source := &mockCtxSource{typeName: typeName, attributeName: attributeName}
-	for _, entity := range e {
-		source.entities = append(source.entities, entity)
+func newMockedContextSource(typeName string, attributeName string, e ...mockEntity) *ContextSourceMock {
+
+	source := &ContextSourceMock{
+		GetProvidedTypeFromIDFunc: func(string) (string, error) { return typeName, nil },
+		ProvidesAttributeFunc:     func(name string) bool { return name == attributeName },
+		ProvidesTypeFunc:          func(name string) bool { return name == typeName },
+		GetEntitiesFunc: func(query Query, callback QueryEntitiesCallback) error {
+			for _, entity := range e {
+				callback(entity)
+			}
+			return nil
+		},
+		RetrieveEntityFunc: func(string, Request) (Entity, error) {
+			e := &mockEntity{}
+			return e, nil
+		},
 	}
+
 	return source
-}
-
-type mockCtxSource struct {
-	typeName      string
-	attributeName string
-	entities      []Entity
-
-	createEntityShouldFailWithError error
-
-	queriedDevice     string
-	createdEntity     string
-	createdEntityType string
-	patchedEntity     string
-	retrievedEntity   string
-
-	generatedQuery Query
-}
-
-func (s *mockCtxSource) CreateEntity(typeName, entityID string, r Request) error {
-	if s.createEntityShouldFailWithError == nil {
-		s.createdEntity = entityID
-		s.createdEntityType = typeName
-
-		entity := &types.BaseEntity{}
-		return r.DecodeBodyInto(entity)
-	}
-
-	return s.createEntityShouldFailWithError
-}
-
-func (s *mockCtxSource) GetEntities(q Query, cb QueryEntitiesCallback) error {
-
-	s.generatedQuery = q
-
-	if q.HasDeviceReference() {
-		s.queriedDevice = q.Device()
-	}
-
-	for _, e := range s.entities {
-		cb(e)
-	}
-	return nil
-}
-
-func (s *mockCtxSource) UpdateEntityAttributes(entityID string, req Request) error {
-	s.patchedEntity = entityID
-	e := &mockEntity{}
-	return req.DecodeBodyInto(e)
-}
-
-func (s *mockCtxSource) ProvidesAttribute(attributeName string) bool {
-	return s.attributeName == attributeName
-}
-
-func (s *mockCtxSource) ProvidesEntitiesWithMatchingID(entityID string) bool {
-	return true
-}
-
-func (s *mockCtxSource) GetProvidedTypeFromID(entityID string) (string, error) {
-	return "", errors.New("not implemented")
-}
-
-func (s *mockCtxSource) ProvidesType(typeName string) bool {
-	return s.typeName == typeName
-}
-
-func (s *mockCtxSource) RetrieveEntity(entityID string, req Request) (Entity, error) {
-	s.retrievedEntity = entityID
-	e := &mockEntity{}
-	return e, nil
 }

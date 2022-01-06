@@ -41,7 +41,7 @@ func getEntityConverterFromRequest(r *http.Request) (string, func(interface{}) i
 	return responseContentType, entityConverter, geoJSONFeatureCollection
 }
 
-//NewQueryEntitiesHandler handles GET requests for NGSI entitites
+//NewQueryEntitiesHandler handles GET requests for NGSI entities
 func NewQueryEntitiesHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
