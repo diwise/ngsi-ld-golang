@@ -325,7 +325,7 @@ func TestRetrieveEntityAsGeoJSON(t *testing.T) {
 	is := is.New(t)
 	beachID := fiware.BeachIDPrefix + "mybeach"
 	req, _ := http.NewRequest("GET", createURL("/entities/"+beachID), nil)
-	req.Header.Set("Accept", "application/geo+json")
+	req.Header.Set("Accept", geojson.ContentType)
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -341,7 +341,7 @@ func TestRetrieveEntityAsGeoJSON(t *testing.T) {
 
 	is.Equal(contextSource.RetrieveEntityCalls()[0].EntityID, beachID) // beach id does not match retrievedEntity
 	is.Equal(w.Code, http.StatusOK)                                    // unexpected response code
-	is.Equal(w.Result().Header.Get("Content-Type"), "application/geo+json;charset=utf-8")
+	is.Equal(w.Result().Header.Get("Content-Type"), geojson.ContentType)
 }
 
 func TestUpdateEntitityAttributes(t *testing.T) {

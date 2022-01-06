@@ -135,7 +135,7 @@ func TestThatGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
 
 	// Send a GET request for entities of type Beach (that are handled by the "remote" source)
 	req, _ = http.NewRequest("GET", "/entities?type=Beach&options=keyValues", nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req.Header["Accept"] = []string{geojson.ContentType}
 	w = httptest.NewRecorder()
 	NewQueryEntitiesHandler(ctxRegistry).ServeHTTP(w, req)
 
@@ -161,7 +161,7 @@ func TestThatSingleGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
 
 	// Send a GET request for entities of type Beach (that are handled by the "remote" source)
 	req, _ = http.NewRequest("GET", "/entities/urn:ngsi-ld:Beach:omaha", nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req.Header["Accept"] = []string{geojson.ContentType}
 	w = httptest.NewRecorder()
 	NewRetrieveEntityHandler(ctxRegistry).ServeHTTP(w, req)
 

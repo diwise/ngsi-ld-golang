@@ -14,7 +14,7 @@ import (
 func TestGetBeachAsGeoJSON(t *testing.T) {
 	is := is.New(t)
 	req, _ := http.NewRequest("GET", createURL("/entities?type=Beach"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -72,7 +72,7 @@ func TestGetLongLatForGeoPropertyMultiPolygon(t *testing.T) {
 func TestGetWaterQualityObservedAsGeoJSON(t *testing.T) {
 	is := is.New(t)
 	req, _ := http.NewRequest("GET", createURL("/entities?type=WaterQualityObserved&options=keyValues"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -92,11 +92,32 @@ func TestGetWaterQualityObservedAsGeoJSON(t *testing.T) {
 	is.Equal(w.Code, 200) // failed to get geojson data
 }
 
+func TestRetrieveWaterQualityObservedAsGeoJSON(t *testing.T) {
+	is := is.New(t)
+	wqo1 := fiware.NewWaterQualityObserved("badtempsensor", 64.2789, 17.2961, "2021-04-22T17:23:41Z")
+	req, _ := http.NewRequest("GET", createURL("/entities/"+wqo1.ID), nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
+
+	w := httptest.NewRecorder()
+	contextRegistry := NewContextRegistry()
+	contextSource := newMockedContextSource("WaterQualityObserved", "temperature")
+	contextSource.ProvidesEntitiesWithMatchingIDFunc = func(string) bool { return true }
+	contextSource.RetrieveEntityFunc = func(string, Request) (Entity, error) {
+		return wqo1, nil
+	}
+
+	contextRegistry.Register(contextSource)
+
+	NewRetrieveEntityHandler(contextRegistry).ServeHTTP(w, req)
+
+	is.Equal(w.Code, 200) // failed to get geojson data
+}
+
 func TestGetEntitiesAsSimplifiedGeoJSON(t *testing.T) {
 	is := is.New(t)
 
 	req, _ := http.NewRequest("GET", createURL("/entities?type=Beach&options=keyValues"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()

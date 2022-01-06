@@ -34,7 +34,7 @@ func getEntityConverterFromRequest(r *http.Request) (string, func(interface{}) i
 			options := r.URL.Query().Get("options")
 			geoJSONFeatureCollection = geojson.NewGeoJSONFeatureCollection([]geojson.GeoJSONFeature{}, true)
 			entityConverter = geojson.NewEntityConverter("location", options == "keyValues", geoJSONFeatureCollection)
-			responseContentType = geojson.ContentTypeWithCharset
+			responseContentType = acceptableType
 		}
 	}
 
@@ -236,7 +236,7 @@ func NewCreateEntityHandlerWithCallback(
 func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO: A more elegant way to select the response content type ...
-		responseContentType, _, _ := getEntityConverterFromRequest(r)
+		responseContentType, entityConverter, _ := getEntityConverterFromRequest(r)
 
 		entitiesIdx := strings.Index(r.URL.Path, "/entities/")
 
@@ -276,7 +276,7 @@ func NewRetrieveEntityHandler(ctxReg ContextRegistry) http.HandlerFunc {
 			return
 		}
 
-		bytes, _ := json.Marshal(entity)
+		bytes, _ := json.Marshal(entityConverter(entity))
 
 		w.Header().Add("Content-Type", responseContentType)
 		w.Write(bytes)
