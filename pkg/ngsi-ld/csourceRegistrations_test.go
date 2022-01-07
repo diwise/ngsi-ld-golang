@@ -166,7 +166,6 @@ func TestThatSingleGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
 	NewRetrieveEntityHandler(ctxRegistry).ServeHTTP(w, req)
 
 	is.Equal(w.Code, http.StatusOK) // failed to get entities from remote endpoint
-	fmt.Println(w.Body)
 }
 
 func TestThatProvidedTypeCanBeExtractedFromMatchingID(t *testing.T) {
