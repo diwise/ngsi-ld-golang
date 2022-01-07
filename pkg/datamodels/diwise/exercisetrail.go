@@ -111,15 +111,15 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 		}
 
 		if t.DateCreated != nil {
-			g.SetProperty("dateCreated", t.DateCreated.Value)
+			g.SetProperty("dateCreated", t.DateCreated.Value.Value)
 		}
 
 		if t.DateModified != nil {
-			g.SetProperty("dateModified", t.DateModified.Value)
+			g.SetProperty("dateModified", t.DateModified.Value.Value)
 		}
 
 		if t.DateLastPreparation != nil {
-			g.SetProperty("dateLastPreparation", t.DateLastPreparation.Value)
+			g.SetProperty("dateLastPreparation", t.DateLastPreparation.Value.Value)
 		}
 
 		if t.Responsible != nil {
