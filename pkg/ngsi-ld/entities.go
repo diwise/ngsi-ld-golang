@@ -199,6 +199,7 @@ func NewCreateEntityHandlerWithCallback(
 				w,
 				fmt.Sprintf("Unable to decode request payload: %s", err.Error()),
 			)
+			return
 		}
 
 		contextSources := ctxReg.GetContextSourcesForEntityType(entity.Type)
