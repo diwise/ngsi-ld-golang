@@ -50,7 +50,7 @@ const (
 )
 
 //GeoQuery contains information about a geo-query that may be used for subscriptions
-//or when querying entitites
+//or when querying entities
 type GeoQuery struct {
 	Geometry    string    `json:"geometry"`
 	Coordinates []float64 `json:"coordinates"`
@@ -154,27 +154,27 @@ func newGeoQueryFromHTTPRequest(georel string, req *http.Request) (*GeoQuery, er
 
 	var err error
 
-	if georel == GeoSpatialRelationNearPoint {
+	if strings.HasPrefix(georel, GeoSpatialRelationNearPoint+";") {
 		geoQuery := &GeoQuery{Geometry: "Point", GeoRel: GeoSpatialRelationNearPoint}
 
 		if req.URL.Query().Get("geometry") != "Point" {
 			return nil, errors.New("the geospatial relationship near is only defined for the geometry type Point")
 		}
 
-		distanceString := req.URL.Query().Get("maxDistance")
-		if len(distanceString) < 2 || !strings.HasPrefix(distanceString, "=") {
-			return nil, errors.New("required parameter maxDistance missing or invalid")
+		distanceIdx := strings.Index(georel, "maxDistance==")
+		if distanceIdx == -1 {
+			return nil, errors.New("required parameter maxDistance is missing")
 		}
 
-		distanceString = distanceString[1:]
+		distanceString := georel[distanceIdx+13:]
 		distance, err := strconv.Atoi(distanceString)
 
 		if err != nil {
-			return nil, errors.New("Failed to parse distance: " + err.Error())
+			return nil, errors.New("failed to parse distance: " + err.Error())
 		}
 
 		if distance < 0 {
-			return nil, errors.New("Distance value must be non negative")
+			return nil, errors.New("distance value must be non negative")
 		}
 
 		geoQuery.distance = uint32(distance)

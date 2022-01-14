@@ -10,6 +10,7 @@ import (
 
 	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
+	"github.com/matryer/is"
 )
 
 func TestRegisterContextSource(t *testing.T) {
@@ -55,6 +56,8 @@ func TestRegisterContextSourceWithIDPatternMatch(t *testing.T) {
 }
 
 func TestThatRequestsWithIDPatternMatchAreForwardedToRemoteContext(t *testing.T) {
+	is := is.New(t)
+
 	mockService := setupMockServiceThatReturns(204, "application/ld+json", "")
 	defer mockService.Close()
 
@@ -77,14 +80,13 @@ func TestThatRequestsWithIDPatternMatchAreForwardedToRemoteContext(t *testing.T)
 
 	for _, src := range sources {
 		err := src.UpdateEntityAttributes(entityID, request)
-		if err != nil {
-			t.Error("Failed with unexpected error", err.Error())
-			return
-		}
+		is.NoErr(err) // failed with unexpected error
 	}
 }
 
 func TestThatRequestsAreForwardedToRemoteContext(t *testing.T) {
+	is := is.New(t)
+
 	mockService := setupMockServiceThatReturns(200, "application/ld+json", snowHeightResponseJSON)
 	defer mockService.Close()
 
@@ -99,7 +101,7 @@ func TestThatRequestsAreForwardedToRemoteContext(t *testing.T) {
 	NewRegisterContextSourceHandler(ctxRegistry).ServeHTTP(w, req)
 
 	// Send a GET request for entities of type WeatherObserved (that are handled by the "remote" source)
-	req, _ = http.NewRequest("GET", "https://localhost/ngsi-ld/v1/entities?type=WeatherObserved", nil)
+	req, _ = http.NewRequest("GET", "/entities?type=WeatherObserved", nil)
 	query, _ := newQueryFromParameters(req, []string{"WeatherObserved"}, []string{"snowHeight"}, "")
 	sources := ctxRegistry.GetContextSourcesForQuery(query)
 
@@ -112,13 +114,13 @@ func TestThatRequestsAreForwardedToRemoteContext(t *testing.T) {
 		})
 	}
 
-	if numEntities == 0 {
-		t.Error("Failed to get entities from remote endpoint.")
-	}
+	is.Equal(numEntities, 1) // failed to get entities from remote endpoint
 }
 
 func TestThatGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
-	mockService := setupMockServiceThatReturns(200, geojson.ContentType, beachResponseJSON)
+	is := is.New(t)
+
+	mockService := setupMockServiceThatReturns(200, geojson.ContentType, beachFeatureCollectionJSON)
 	defer mockService.Close()
 
 	remoteURL := mockService.URL
@@ -132,17 +134,42 @@ func TestThatGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
 	NewRegisterContextSourceHandler(ctxRegistry).ServeHTTP(w, req)
 
 	// Send a GET request for entities of type Beach (that are handled by the "remote" source)
-	req, _ = http.NewRequest("GET", "https://localhost/ngsi-ld/v1/entities?type=Beach&options=keyValues", nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	req, _ = http.NewRequest("GET", "/entities?type=Beach&options=keyValues", nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
 	w = httptest.NewRecorder()
 	NewQueryEntitiesHandler(ctxRegistry).ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Error("Failed to get entities from remote endpoint.")
-	}
+	is.Equal(w.Code, http.StatusOK) // failed to get entities from remote endpoint
+}
+
+func TestThatSingleGeoJSONResponsesAreProperlyPropagated(t *testing.T) {
+	is := is.New(t)
+
+	mockService := setupMockServiceThatReturns(200, geojson.ContentType, beachFeatureJSON)
+	defer mockService.Close()
+
+	remoteURL := mockService.URL
+	regex := "^urn:ngsi-ld:Beach:.+"
+	registrationBody, _ := NewCsourceRegistration("Beach", []string{""}, remoteURL, &regex)
+	jsonBytes, _ := json.Marshal(registrationBody)
+	ctxRegistry := NewContextRegistry()
+
+	// Send a POST request to register a remote context source
+	req, _ := http.NewRequest("POST", createURL("/csourceRegistration"), bytes.NewBuffer(jsonBytes))
+	w := httptest.NewRecorder()
+	NewRegisterContextSourceHandler(ctxRegistry).ServeHTTP(w, req)
+
+	// Send a GET request for entities of type Beach (that are handled by the "remote" source)
+	req, _ = http.NewRequest("GET", "/entities/urn:ngsi-ld:Beach:omaha", nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
+	w = httptest.NewRecorder()
+	NewRetrieveEntityHandler(ctxRegistry).ServeHTTP(w, req)
+
+	is.Equal(w.Code, http.StatusOK) // failed to get entities from remote endpoint
 }
 
 func TestThatProvidedTypeCanBeExtractedFromMatchingID(t *testing.T) {
+	is := is.New(t)
 
 	const expectedType string = "Road"
 	regex := fmt.Sprintf("^urn:ngsi-ld:%s:.+", expectedType)
@@ -151,13 +178,10 @@ func TestThatProvidedTypeCanBeExtractedFromMatchingID(t *testing.T) {
 
 	entityType, _ := contextSource.GetProvidedTypeFromID(fmt.Sprintf("urn:ngsi-ld:%s:myid", expectedType))
 
-	if entityType != expectedType {
-		t.Errorf("provided type %s does not match expectation (%s)", entityType, expectedType)
-	}
+	is.Equal(entityType, expectedType) // provided type does not match expectation
 }
 
-const beachResponseJSON string = `{"type": "FeatureCollection","features": [
-	{"id":"urn:ngsi-ld:Beach:42","type": "Feature",
+const beachFeatureJSON string = `{"id":"urn:ngsi-ld:Beach:42","type": "Feature",
 	"geometry": {
 		"type": "MultiPolygon",
 		"coordinates": [[[
@@ -181,7 +205,9 @@ const beachResponseJSON string = `{"type": "FeatureCollection","features": [
 		"urn:ngsi-ld:Device:tempsensor-19"
 	  ],
 	  "type": "Beach"
-	}}]}`
+	}}`
+
+const beachFeatureCollectionJSON string = `{"type": "FeatureCollection","features": [` + beachFeatureJSON + `]}`
 
 const snowHeightResponseJSON string = "[{\"id\": \"urn:ngsi-ld:WeatherObserved:SnowHeight:snow_10a52aaa84c35727:2020-04-08T15:01:32Z\", \"type\": \"WeatherObserved\",\"dateObserved\": { \"type\": \"Property\", \"value\": {\"@type\": \"DateTime\", \"@value\": \"2020-04-08T15:01:32Z\"}}, \"location\": { \"type\": \"GeoProperty\", \"value\": { \"type\": \"Point\", \"coordinates\": [16.5687632, 62.4081681]}}, \"refDevice\": {\"type\": \"Relationship\", \"object\": \"urn:ngsi-ld:Device:snow_10a52aaa84c35727\"}, \"snowHeight\": { \"type\": \"Property\", \"value\": 0}, \"@context\": [\"https://schema.lab.fiware.org/ld/context\", \"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld\"]}]"
 

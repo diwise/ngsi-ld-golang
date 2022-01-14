@@ -134,7 +134,7 @@ func (rcs *remoteContextSource) GetEntities(query Query, callback QueryEntitiesC
 	response, err := proxyToRemote(u, req)
 
 	// If the response code is 200 we can just unmarshal the payload
-	// and pass the individual entitites to the supplied callback.
+	// and pass the individual entities to the supplied callback.
 	// We need to check of the payload is GeoJSON or not though.
 	if response.responseCode == http.StatusOK {
 
@@ -224,12 +224,22 @@ func (rcs *remoteContextSource) RetrieveEntity(entityID string, r Request) (Enti
 		return nil, fmt.Errorf("failed to retrieve entity %s: %s", entityID, err.Error())
 	}
 
-	var entity interface{}
-
 	if response.responseCode == http.StatusOK {
-		err = json.Unmarshal(response.bytes, &entity)
-		if err == nil {
-			return entity, nil
+		if response.MatchesContentType(geojson.ContentType) {
+			var entity geojson.GeoJSONFeature
+			err = geojson.UnpackGeoJSONToCallback(response.bytes, func(f geojson.GeoJSONFeature) error {
+				entity = f
+				return nil
+			})
+			if err == nil {
+				return entity, nil
+			}
+		} else {
+			var entity interface{}
+			err = json.Unmarshal(response.bytes, &entity)
+			if err == nil {
+				return entity, nil
+			}
 		}
 
 		return nil, fmt.Errorf(

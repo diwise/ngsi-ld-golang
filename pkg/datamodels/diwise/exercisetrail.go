@@ -14,7 +14,9 @@ type ExerciseTrail struct {
 	ngsi.BaseEntity
 	Name                *ngsi.TextProperty            `json:"name"`
 	Description         *ngsi.TextProperty            `json:"description"`
+	Category            *ngsi.TextListProperty        `json:"category,omitempty"`
 	RefTrailSegment     *ngsi.MultiObjectRelationship `json:"refTrailSegment,omitempty"`
+	AreaServed          *ngsi.TextProperty            `json:"areaServed,omitempty"`
 	Location            geojson.GeoJSONGeometry       `json:"location,omitempty"`
 	Length              *ngsi.NumberProperty          `json:"length,omitempty"`
 	Difficulty          *ngsi.TextProperty            `json:"difficulty,omitempty"`
@@ -31,7 +33,9 @@ type exerciseTrailDTO struct {
 	ngsi.BaseEntity
 	Name                *ngsi.TextProperty            `json:"name"`
 	Description         *ngsi.TextProperty            `json:"description"`
+	Category            *ngsi.TextListProperty        `json:"category,omitempty"`
 	RefTrailSegment     *ngsi.MultiObjectRelationship `json:"refTrailSegment,omitempty"`
+	AreaServed          *ngsi.TextProperty            `json:"areaServed,omitempty"`
 	Location            json.RawMessage               `json:"location,omitempty"`
 	Length              *ngsi.NumberProperty          `json:"length,omitempty"`
 	Difficulty          *ngsi.TextProperty            `json:"difficulty,omitempty"`
@@ -78,6 +82,14 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 		g.SetProperty("name", t.Name.Value)
 		g.SetProperty(propertyName, t.Location.GeoPropertyValue())
 
+		if t.AreaServed != nil {
+			g.SetProperty("areaServed", t.AreaServed.Value)
+		}
+
+		if t.Category != nil {
+			g.SetProperty("category", t.Category.Value)
+		}
+
 		if t.Description != nil {
 			g.SetProperty("description", t.Description.Value)
 		}
@@ -99,15 +111,15 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 		}
 
 		if t.DateCreated != nil {
-			g.SetProperty("dateCreated", t.DateCreated.Value)
+			g.SetProperty("dateCreated", t.DateCreated.Value.Value)
 		}
 
 		if t.DateModified != nil {
-			g.SetProperty("dateModified", t.DateModified.Value)
+			g.SetProperty("dateModified", t.DateModified.Value.Value)
 		}
 
 		if t.DateLastPreparation != nil {
-			g.SetProperty("dateLastPreparation", t.DateLastPreparation.Value)
+			g.SetProperty("dateLastPreparation", t.DateLastPreparation.Value.Value)
 		}
 
 		if t.Responsible != nil {
@@ -125,6 +137,8 @@ func (t ExerciseTrail) ToGeoJSONFeature(propertyName string, simplified bool) (g
 		g.SetProperty("name", t.Name)
 		g.SetProperty(propertyName, t.Location)
 
+		g.SetProperty("areaServed", t.AreaServed)
+		g.SetProperty("category", t.Category)
 		g.SetProperty("description", t.Description)
 		g.SetProperty("refSeeAlso", t.RefSeeAlso)
 
@@ -150,6 +164,7 @@ func (t *ExerciseTrail) UnmarshalJSON(data []byte) error {
 		t.ID = dto.ID
 		t.Type = dto.Type
 		t.Name = dto.Name
+		t.Category = dto.Category
 		t.Description = dto.Description
 
 		t.DateCreated = dto.DateCreated
@@ -166,6 +181,7 @@ func (t *ExerciseTrail) UnmarshalJSON(data []byte) error {
 		t.Context = dto.Context
 
 		t.Location = geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+		t.AreaServed = dto.AreaServed
 	}
 
 	return err

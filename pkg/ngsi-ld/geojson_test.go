@@ -1,7 +1,6 @@
 package ngsi
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,11 +8,13 @@ import (
 	"github.com/diwise/ngsi-ld-golang/pkg/datamodels/fiware"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/geojson"
 	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
+	"github.com/matryer/is"
 )
 
 func TestGetBeachAsGeoJSON(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL("/entitites?type=Beach"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	is := is.New(t)
+	req, _ := http.NewRequest("GET", createURL("/entities?type=Beach"), nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -23,34 +24,40 @@ func TestGetBeachAsGeoJSON(t *testing.T) {
 	b1 := fiware.NewBeach("omaha", "Omaha Beach", location).WithDescription("This is a nice beach!")
 	b1.WaterTemperature = types.NewNumberProperty(7.2)
 
-	contextSource.entities = append(
-		contextSource.entities,
-		b1,
-	)
+	contextSource.GetEntitiesFunc = func(q Query, callback QueryEntitiesCallback) error {
+		callback(b1)
+		return nil
+	}
 
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	fmt.Printf("Got response: %s\n", w.Body)
-
-	if w.Code != 200 {
-		t.Error("Failed to get geojson data")
-	}
+	is.Equal(w.Code, 200) // failed to get geojson data
 }
 
 func TestGetLongLatForGeoPropertyPoint(t *testing.T) {
-	location := geojson.CreateGeoJSONPropertyFromWGS84(17.2961, 65.2789)
+	is := is.New(t)
+
+	lat := 65.2789
+	lon := 17.2961
+	location := geojson.CreateGeoJSONPropertyFromWGS84(lon, lat)
 
 	beach := fiware.NewBeach("beach", "Beach Beach", location).WithDescription("A very beachy beach.")
-	fmt.Print(beach.Location.GetAsPoint())
+
+	is.Equal(beach.Location.GetAsPoint().Latitude(), lat)
+	is.Equal(beach.Location.GetAsPoint().Longitude(), lon)
 }
 
 func TestGetLongLatForGeoPropertyMultiPolygon(t *testing.T) {
+	is := is.New(t)
+
+	lon := 17.2961
+	lat := 65.2789
 	poly := [][][][]float64{}
 	row1 := [][][]float64{}
 	row2 := [][]float64{}
-	row3 := []float64{17.2961, 65.2789}
+	row3 := []float64{lon, lat}
 	row2 = append(row2, row3)
 	row1 = append(row1, row2)
 	poly = append(poly, row1)
@@ -58,12 +65,14 @@ func TestGetLongLatForGeoPropertyMultiPolygon(t *testing.T) {
 	location := geojson.CreateGeoJSONPropertyFromMultiPolygon(poly)
 
 	beach := fiware.NewBeach("beach", "Beach Beach", location).WithDescription("A very beachy beach.")
-	fmt.Print(beach.Location.GetAsPoint())
+	is.Equal(beach.Location.GetAsPoint().Latitude(), lat)
+	is.Equal(beach.Location.GetAsPoint().Longitude(), lon)
 }
 
 func TestGetWaterQualityObservedAsGeoJSON(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL("/entitites?type=WaterQualityObserved&options=keyValues"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	is := is.New(t)
+	req, _ := http.NewRequest("GET", createURL("/entities?type=WaterQualityObserved&options=keyValues"), nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -71,25 +80,44 @@ func TestGetWaterQualityObservedAsGeoJSON(t *testing.T) {
 
 	wqo1 := fiware.NewWaterQualityObserved("badtempsensor", 64.2789, 17.2961, "2021-04-22T17:23:41Z")
 
-	contextSource.entities = append(
-		contextSource.entities,
-		wqo1,
-	)
+	contextSource.GetEntitiesFunc = func(q Query, callback QueryEntitiesCallback) error {
+		callback(wqo1)
+		return nil
+	}
 
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	fmt.Printf("Got response: %s\n", w.Body)
+	is.Equal(w.Code, 200) // failed to get geojson data
+}
 
-	if w.Code != 200 {
-		t.Error("Failed to get geojson data")
+func TestRetrieveWaterQualityObservedAsGeoJSON(t *testing.T) {
+	is := is.New(t)
+	wqo1 := fiware.NewWaterQualityObserved("badtempsensor", 64.2789, 17.2961, "2021-04-22T17:23:41Z")
+	req, _ := http.NewRequest("GET", createURL("/entities/"+wqo1.ID), nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
+
+	w := httptest.NewRecorder()
+	contextRegistry := NewContextRegistry()
+	contextSource := newMockedContextSource("WaterQualityObserved", "temperature")
+	contextSource.ProvidesEntitiesWithMatchingIDFunc = func(string) bool { return true }
+	contextSource.RetrieveEntityFunc = func(string, Request) (Entity, error) {
+		return wqo1, nil
 	}
+
+	contextRegistry.Register(contextSource)
+
+	NewRetrieveEntityHandler(contextRegistry).ServeHTTP(w, req)
+
+	is.Equal(w.Code, 200) // failed to get geojson data
 }
 
 func TestGetEntitiesAsSimplifiedGeoJSON(t *testing.T) {
-	req, _ := http.NewRequest("GET", createURL("/entitites?type=Beach&options=keyValues"), nil)
-	req.Header["Accept"] = []string{"application/geo+json"}
+	is := is.New(t)
+
+	req, _ := http.NewRequest("GET", createURL("/entities?type=Beach&options=keyValues"), nil)
+	req.Header["Accept"] = []string{geojson.ContentType}
 
 	w := httptest.NewRecorder()
 	contextRegistry := NewContextRegistry()
@@ -99,18 +127,14 @@ func TestGetEntitiesAsSimplifiedGeoJSON(t *testing.T) {
 	b1 := fiware.NewBeach("omaha", "Omaha Beach", location).WithDescription("This is a nice beach!")
 	b1.WaterTemperature = types.NewNumberProperty(7.2)
 
-	contextSource.entities = append(
-		contextSource.entities,
-		b1,
-	)
+	contextSource.GetEntitiesFunc = func(q Query, callback QueryEntitiesCallback) error {
+		callback(b1)
+		return nil
+	}
 
 	contextRegistry.Register(contextSource)
 
 	NewQueryEntitiesHandler(contextRegistry).ServeHTTP(w, req)
 
-	fmt.Printf("Got response: %s\n", w.Body)
-
-	if w.Code != 200 {
-		t.Error("Failed to get geojson data")
-	}
+	is.Equal(w.Code, 200) // failed to get geojson data
 }
