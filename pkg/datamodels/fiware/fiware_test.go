@@ -14,6 +14,17 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestUnmarshalJSONToAirQualityObserved(t *testing.T) {
+	is := is.New(t)
+	aqo := AirQualityObserved{}
+
+	err := json.Unmarshal([]byte(airQualityObservedJson), &aqo)
+
+	is.NoErr(err)                         // Could not unmarshal json string into AirQualityObserved
+	is.True(aqo.CO2 != nil)               // CO2 should be present
+	is.Equal(aqo.CO2.Value, float64(449)) // CO2 value should be 449
+}
+
 func TestUnmarshalJSONToWaterConsumptionObserved(t *testing.T) {
 	is := is.New(t)
 	wco := WaterConsumptionObserved{}
@@ -21,7 +32,6 @@ func TestUnmarshalJSONToWaterConsumptionObserved(t *testing.T) {
 	err := json.Unmarshal([]byte(wcoJson), &wco)
 
 	is.NoErr(err) // Could not unmarshal json string into WaterConsumptionObserved
-
 }
 
 func TestNewWaterConsumptionObserved(t *testing.T) {
@@ -289,5 +299,106 @@ const wcoJson string = `{
     },
     "@context": [
         "https://raw.githubusercontent.com/easy-global-market/ngsild-api-data-models/master/WaterSmartMeter/jsonld-contexts/waterSmartMeter-compound.jsonld"
+    ]
+}`
+
+const airQualityObservedJson string = `{
+    "id": "urn:ngsi-ld:AirQualityObserved:Madrid-AmbientObserved-28079004-2016-11-30T07:00:00",
+    "type": "AirQualityObserved",
+    "dateObserved": {
+        "type": "Property",
+        "value": {
+            "@type": "DateTime",
+            "@value": "2016-11-30T07:00:00.00Z"
+        }
+    },
+    "airQualityLevel": {
+        "type": "Property",
+        "value": "moderate"
+    },
+    "CO2": {
+        "type": "Property",
+        "value": 449,
+        "unitCode": "59"
+    },
+    "temperature": {
+        "type": "Property",
+        "value": 12.2
+    },
+    "NO": {
+        "type": "Property",
+        "value": 45,
+        "unitCode": "GQ"
+    },
+    "refPointOfInterest": {
+        "type": "Relationship",
+        "object": "urn:ngsi-ld:PointOfInterest:28079004-Pza.deEspanya"
+    },
+    "windDirection": {
+        "type": "Property",
+        "value": 186
+    },
+    "source": {
+        "type": "Property",
+        "value": "http://datos.madrid.es"
+    },
+    "windSpeed": {
+        "type": "Property",
+        "value": 0.64
+    },
+    "SO2": {
+        "type": "Property",
+        "value": 11,
+        "unitCode": "GQ"
+    },
+    "NOx": {
+        "type": "Property",
+        "value": 139,
+        "unitCode": "GQ"
+    },
+    "location": {
+        "type": "GeoProperty",
+        "value": {
+            "type": "Point",
+            "coordinates": [-3.712247222222222, 40.423852777777775]
+        }
+    },
+    "airQualityIndex": {
+        "type": "Property",
+        "value": 65
+    },
+    "address": {
+        "type": "Property",
+        "value": {
+            "addressCountry": "ES",
+            "addressLocality": "Madrid",
+            "streetAddress": "Plaza de Espa\u00f1a",
+            "type": "PostalAddress"
+        }
+    },
+    "reliability": {
+        "type": "Property",
+        "value": 0.7
+    },
+    "relativeHumidity": {
+        "type": "Property",
+        "value": 0.54
+    },
+    "precipitation": {
+        "type": "Property",
+        "value": 0
+    },
+    "NO2": {
+        "type": "Property",
+        "value": 69,
+        "unitCode": "GQ"
+    },
+    "CO_Level": {
+        "type": "Property",
+        "value": "moderate"
+    },
+    "@context": [
+        "https://schema.lab.fiware.org/ld/context",
+        "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld"
     ]
 }`

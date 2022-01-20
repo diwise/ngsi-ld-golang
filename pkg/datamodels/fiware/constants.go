@@ -3,6 +3,10 @@ package fiware
 const urnPrefix string = "urn:ngsi-ld:"
 
 const (
+	//AirQualityObservedTypeName is a type name constant for AirQualityObserved
+	AirQualityObservedTypeName string = "AirQualityObserved"
+	//AirQualityObservedIDPrefix contains the mandatory prefix for AirQualityObserved ID:s
+	AirQualityObservedIDPrefix string = urnPrefix + AirQualityObservedTypeName + ":"
 	//BeachTypeName is a type name constant for Beach
 	BeachTypeName string = "Beach"
 	//BeachIDPrefix contains the mandatory prefix for Beach ID:s

@@ -40,7 +40,8 @@ func CreateDateTimeProperty(value string) *DateTimeProperty {
 //NumberProperty holds a float64 Value
 type NumberProperty struct {
 	Property
-	Value float64 `json:"value"`
+	Value    float64 `json:"value"`
+	UnitCode *string `json:"unitCode,omitempty"`
 }
 
 //NewNumberProperty is a convenience function for creating NumberProperty instances
@@ -49,6 +50,13 @@ func NewNumberProperty(value float64) *NumberProperty {
 		Property: Property{Type: "Property"},
 		Value:    value,
 	}
+}
+
+//NewNumberPropertyWithUnitCode is a convenience function for creating NumberProperty instances with a unit code
+func NewNumberPropertyWithUnitCode(value float64, code string) *NumberProperty {
+	np := NewNumberProperty(value)
+	np.UnitCode = &code
+	return np
 }
 
 //NewNumberPropertyFromInt accepts a value as an int and returns a new NumberProperty
