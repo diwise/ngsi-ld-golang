@@ -18,6 +18,7 @@ type Device struct {
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	Location              *geojson.GeoJSONProperty       `json:"location,omitempty"`
 	RefDeviceModel        *ngsi.SingleObjectRelationship `json:"refDeviceModel,omitempty"`
+	DeviceState           *ngsi.TextProperty             `json:"deviceState,omitempty"`
 }
 
 type deviceDTO struct {
@@ -28,6 +29,7 @@ type deviceDTO struct {
 	DateModified          *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	Location              json.RawMessage                `json:"location,omitempty"`
 	RefDeviceModel        *ngsi.SingleObjectRelationship `json:"refDeviceModel,omitempty"`
+	DeviceState           *ngsi.TextProperty             `json:"deviceState,omitempty"`
 }
 
 //NewDevice creates a new Device from given ID and Value
@@ -81,6 +83,7 @@ func (d *Device) UnmarshalJSON(data []byte) error {
 		}
 
 		d.RefDeviceModel = dto.RefDeviceModel
+		d.DeviceState = dto.DeviceState
 
 		d.Context = dto.Context
 	}
