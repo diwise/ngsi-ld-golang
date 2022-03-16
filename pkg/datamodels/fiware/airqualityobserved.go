@@ -13,7 +13,7 @@ type AirQualityObserved struct {
 	ngsi.BaseEntity
 	DateCreated        *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified       *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
-	DateObserved       ngsi.DateTimeProperty          `json:"dateObserved"`
+	DateObserved       ngsi.TextProperty              `json:"dateObserved"`
 	Location           geojson.GeoJSONProperty        `json:"location"`
 	RefDevice          *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
 	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterest,omitempty"`
@@ -27,7 +27,7 @@ type airQualityDTO struct {
 	ngsi.BaseEntity
 	DateCreated        *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified       *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
-	DateObserved       ngsi.DateTimeProperty          `json:"dateObserved"`
+	DateObserved       ngsi.TextProperty              `json:"dateObserved"`
 	Location           json.RawMessage                `json:"location"`
 	RefDevice          *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
 	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterest,omitempty"`
@@ -39,7 +39,7 @@ type airQualityDTO struct {
 
 //NewAirQualityObserved creates a new instance of AirQualityObserved
 func NewAirQualityObserved(device string, latitude float64, longitude float64, observedAt string) *AirQualityObserved {
-	dateTimeValue := ngsi.CreateDateTimeProperty(observedAt)
+	dateTimeValue := ngsi.NewTextProperty(observedAt)
 	refDevice := CreateDeviceRelationshipFromDevice(device)
 
 	id := AirQualityObservedIDPrefix + device + ":" + observedAt
@@ -64,7 +64,7 @@ func (aqo AirQualityObserved) ToGeoJSONFeature(propertyName string, simplified b
 
 	if simplified {
 		g.SetProperty(propertyName, aqo.Location.GeoPropertyValue())
-		g.SetProperty("dateObserved", aqo.DateObserved.Value.Value)
+		g.SetProperty("dateObserved", aqo.DateObserved.Value)
 
 		if aqo.AreaServed != nil {
 			g.SetProperty("areaServed", aqo.AreaServed.Value)
