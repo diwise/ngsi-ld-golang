@@ -14,7 +14,7 @@ type AirQualityObserved struct {
 	DateCreated        *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified       *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObserved       ngsi.TextProperty              `json:"dateObserved"`
-	Location           geojson.GeoJSONProperty        `json:"location"`
+	Location           geojson.GeoJSONProperty        `json:"location,omitempty"`
 	RefDevice          *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
 	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterest,omitempty"`
 	AreaServed         *ngsi.TextProperty             `json:"areaServed,omitempty"`
@@ -28,7 +28,7 @@ type airQualityDTO struct {
 	DateCreated        *ngsi.DateTimeProperty         `json:"dateCreated,omitempty"`
 	DateModified       *ngsi.DateTimeProperty         `json:"dateModified,omitempty"`
 	DateObserved       ngsi.TextProperty              `json:"dateObserved"`
-	Location           json.RawMessage                `json:"location"`
+	Location           json.RawMessage                `json:"location,omitempty"`
 	RefDevice          *ngsi.SingleObjectRelationship `json:"refDevice,omitempty"`
 	RefPointOfInterest *ngsi.SingleObjectRelationship `json:"refPointOfInterest,omitempty"`
 	AreaServed         *ngsi.TextProperty             `json:"areaServed,omitempty"`
