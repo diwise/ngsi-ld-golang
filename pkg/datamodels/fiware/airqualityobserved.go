@@ -124,8 +124,10 @@ func (aqo *AirQualityObserved) UnmarshalJSON(data []byte) error {
 
 		aqo.Context = dto.Context
 
-		aqo.Location = *geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
-
+		location := geojson.CreateGeoJSONPropertyFromJSON(dto.Location)
+		if location != nil {
+			aqo.Location = *location
+		}
 	}
 
 	return err
