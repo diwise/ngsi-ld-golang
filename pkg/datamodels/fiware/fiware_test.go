@@ -2,7 +2,6 @@ package fiware
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -55,7 +54,7 @@ func TestRoadSegment(t *testing.T) {
 	rs := NewRoadSegment("segid", "segname", "roadid", location, &ts)
 
 	if rs.ID != "urn:ngsi-ld:RoadSegment:segid" {
-		t.Error(fmt.Sprintf("Expectation failed. Road id %s != %s", rs.ID, "segid"))
+		t.Errorf("Expectation failed. Road id %s != %s", rs.ID, "segid")
 	}
 
 	probability := 0.8
@@ -63,11 +62,11 @@ func TestRoadSegment(t *testing.T) {
 	rs = rs.WithSurfaceType(surfaceType, probability)
 
 	if rs.SurfaceType.Probability != probability {
-		t.Error(fmt.Sprintf("Expectation failed. Surface type probability %f != %f", rs.SurfaceType.Probability, probability))
+		t.Errorf("Expectation failed. Surface type probability %f != %f", rs.SurfaceType.Probability, probability)
 	}
 
 	if rs.SurfaceType.Value != surfaceType {
-		t.Error(fmt.Sprintf("Expectation failed. Surface type %s != %s", rs.SurfaceType.Value, surfaceType))
+		t.Errorf("Expectation failed. Surface type %s != %s", rs.SurfaceType.Value, surfaceType)
 	}
 }
 
@@ -77,7 +76,7 @@ func TestDeviceModel(t *testing.T) {
 	deviceModel := NewDeviceModel("id", categories)
 
 	if deviceModel.Category.Value[0] != categories[0] {
-		t.Error(fmt.Sprintf("Expectation failed. Category does not match %s", categories))
+		t.Errorf("Expectation failed. Category does not match %s", categories)
 	}
 
 	// test devicemodel categories are as expected
