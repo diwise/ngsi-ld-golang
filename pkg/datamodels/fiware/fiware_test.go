@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 	"github.com/matryer/is"
 )
 
@@ -116,6 +117,21 @@ func TestTrafficFlowObserved(t *testing.T) {
 
 	if tfo == nil {
 		t.Error("Expectation failed. TrafficFlowObserved is empty")
+	}
+}
+
+func TestRoadAccident(t *testing.T) {
+
+	ra := NewRoadAccident(RoadAccidentIDPrefix + "roadAccidentTest")
+
+	ra.AccidentDate = *types.CreateDateTimeProperty("2021-05-23T23:14:16.000Z")
+
+	if ra == nil {
+		t.Error("Expectation failed. RoadAccident is empty")
+	}
+
+	if ra.AccidentDate.Value.Value != "2021-05-23T23:14:16.000Z" {
+		t.Error("Expected dates to be identical.")
 	}
 }
 

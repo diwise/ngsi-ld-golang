@@ -35,6 +35,10 @@ const (
 	RoadTypeName string = "Road"
 	//RoadIDPrefix ...
 	RoadIDPrefix string = urnPrefix + RoadTypeName + ":"
+	//RoadAccident is a type name constant for RoadAccident
+	RoadAccidentTypeName string = "RoadAccident"
+	//RoadAccidentIDPrefix...
+	RoadAccidentIDPrefix string = urnPrefix + RoadAccidentTypeName + ":"
 	//RoadSegmentTypeName is a type name constant for RoadSegment
 	RoadSegmentTypeName string = "RoadSegment"
 	//RoadSegmentIDPrefix ...
