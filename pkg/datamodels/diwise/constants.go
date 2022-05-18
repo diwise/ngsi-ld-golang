@@ -7,6 +7,10 @@ const (
 	ExerciseTrailIDPrefix string = urnPrefix + ExerciseTrailTypeName + ":"
 	// ExerciseTrailTypeName is a type name constant for ExerciseTrail
 	ExerciseTrailTypeName string = "ExerciseTrail"
+	// LifebuoyIDPrefix contains the mandatory prefix for Lifebuoy ID
+	LifebuoyIDPrefix string = urnPrefix + LifebuoyTypeName + ":"
+	// LifebuoyTypeName is a type name constant for Lifebuoy
+	LifebuoyTypeName string = "Lifebuoy"
 	//RoadSurfaceObservedTypeName is a type name constant for RoadSurfaceObserved
 	RoadSurfaceObservedTypeName string = "RoadSurfaceObserved"
 	// RoadSurfaceObservedIDPrefix contains the mandatory prefix for Road Surfaces Observed

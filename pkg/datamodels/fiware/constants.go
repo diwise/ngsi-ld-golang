@@ -14,7 +14,7 @@ const (
 	//CityWorkTypeName is a type name constant for CityWork
 	CityWorkTypeName string = "CityWork"
 	//CityWorkIDPrefix contains the mandatory prefix for CityWork ID:s
-	CityWorkIDPrefix string = urnPrefix + CityWorkTypeName + ":"			
+	CityWorkIDPrefix string = urnPrefix + CityWorkTypeName + ":"
 	//DeviceTypeName is a type name constant for Device
 	DeviceTypeName string = "Device"
 	//DeviceIDPrefix contains the mandatory prefix for Device ID:s
