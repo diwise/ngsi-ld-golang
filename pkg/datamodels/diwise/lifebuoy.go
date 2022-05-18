@@ -14,9 +14,6 @@ type Lifebuoy struct {
 	DateObserved *ngsi.DateTimeProperty  `json:"dateObserved,omitempty"`
 }
 
-const LifebuoyTypeName string = "Lifebuoy"
-const LifebuoyIDPrefix string = urnPrefix + LifebuoyTypeName + ":"
-
 func NewLifebuoy(id string, status string) *Lifebuoy {
 	if !strings.HasPrefix(id, LifebuoyIDPrefix) {
 		id = LifebuoyIDPrefix + id
