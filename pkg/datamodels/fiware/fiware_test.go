@@ -120,18 +120,15 @@ func TestTrafficFlowObserved(t *testing.T) {
 }
 
 func TestRoadAccident(t *testing.T) {
-
+	is := is.New(t)
 	ra := NewRoadAccident(RoadAccidentIDPrefix + "roadAccidentTest")
 
-	ra.AccidentDate = *types.CreateDateTimeProperty("2021-05-23T23:14:16.000Z")
+	date := *types.CreateDateTimeProperty("2021-05-23T23:14:16.000Z")
 
-	if ra == nil {
-		t.Error("Expectation failed. RoadAccident is empty")
-	}
+	ra.AccidentDate = date
 
-	if ra.AccidentDate.Value.Value != "2021-05-23T23:14:16.000Z" {
-		t.Error("Expected dates to be identical.")
-	}
+	is.True(ra != nil)                                                // Expectation failed. RoadAccident is empty
+	is.Equal(ra.AccidentDate.Value.Value, "2021-05-23T23:14:16.000Z") // Timestamps should match
 }
 
 const jsonStr string = `{
