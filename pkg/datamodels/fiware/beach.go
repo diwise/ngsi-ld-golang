@@ -9,7 +9,7 @@ import (
 	ngsi "github.com/diwise/ngsi-ld-golang/pkg/ngsi-ld/types"
 )
 
-//Beach is a Fiware entity
+// Beach is a Fiware entity
 type Beach struct {
 	ngsi.BaseEntity
 	Name             *ngsi.TextProperty            `json:"name,omitempty"`
@@ -69,7 +69,7 @@ func (b Beach) ToGeoJSONFeature(propertyName string, simplified bool) (geojson.G
 	return g, nil
 }
 
-//NewBeach creates a new Beach from given ID and name
+// NewBeach creates a new Beach from given ID and name
 func NewBeach(id, name string, location geojson.GeoJSONGeometry) *Beach {
 	if !strings.HasPrefix(id, BeachIDPrefix) {
 		id = BeachIDPrefix + id
@@ -89,7 +89,7 @@ func NewBeach(id, name string, location geojson.GeoJSONGeometry) *Beach {
 	}
 }
 
-//WithDescription adds a text property named Deescription to this Beach instance
+// WithDescription adds a text property named Description to this Beach instance
 func (b *Beach) WithDescription(description string) *Beach {
 	b.Description = ngsi.NewTextProperty(description)
 	return b
