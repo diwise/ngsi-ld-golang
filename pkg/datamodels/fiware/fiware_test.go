@@ -322,10 +322,7 @@ const airQualityObservedJson string = `{
     "type": "AirQualityObserved",
     "dateObserved": {
         "type": "Property",
-        "value": {
-            "@type": "DateTime",
-            "@value": "2016-11-30T07:00:00.00Z"
-        }
+        "value": "2016-11-30T07:00:00.00Z"
     },
     "airQualityLevel": {
         "type": "Property",
